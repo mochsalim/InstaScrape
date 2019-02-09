@@ -2,7 +2,7 @@
 
 <p align="center"><em>A fast and lightweight Instagram media downloader (that scrapes the web)</em></p>
 
-<p align="center"><img src="./screenshot.png" width=70% alt="screenshot"></p>
+<p align="center"><img src="./demo.gif" width=70% alt="screenshot"></p>
 
 <p align="center">
   <a href="https://pypi.python.org/pypi/InstaScrape"><img src="https://img.shields.io/pypi/v/instascrape-ax.svg"></a>

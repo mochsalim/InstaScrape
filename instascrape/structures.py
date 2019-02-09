@@ -135,6 +135,8 @@ class BaseStructure:
         else:
             total = 100000  # if unlimited count of posts found, set max limit to 100 thousands
         logger.debug("Count: {0} Items".format(count))
+        if total < count:
+            logger.warning("Only {0} items can be fetched.".format(total))
 
         yield (False) if not data["edges"] else (count if total > count else total)
 
@@ -163,9 +165,6 @@ class BaseStructure:
                 break
             page_i += 1
             time.sleep(random.randrange(3))  # delay: prevent getting rate limited by Instagram
-
-        if len(results) < count:
-            logger.warning("Only {0} items can be fetched.".format(len(results)))
 
     def as_dict(self) -> dict:
         """Maps properties to a dictionary"""
