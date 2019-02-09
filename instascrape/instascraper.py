@@ -1,13 +1,16 @@
 import re
 import logging
+import os
+import json
 
 import requests
 
-from instascrape.logger import set_logger
-from instascrape.utils import (dump_cookie, load_cookie, delete_cookie, instance_worker, instance_generator)
 from instascrape.constants import *
 from instascrape.structures import *
 from instascrape.exceptions import *
+from instascrape.logger import set_logger
+from instascrape.download import (_down_posts, _down_containers, _down_from_src)
+from instascrape.utils import (dump_cookie, load_cookie, delete_cookie, instance_worker, instance_generator)
 
 
 class LoggerMixin:
@@ -425,3 +428,135 @@ class InstaScraper(LoggerMixin):
             self._logger.error("No comments found.")
             return []
         return comments
+
+    # ===========Download Methods===============
+
+    def download_post(self, shortcode: str, dest: str = None, dump_metadata: bool = False) -> str:
+        p = self.get_post(shortcode)
+        self._logger.info("Downloading {0} with {1} media...".format(shortcode, len(p)))
+        # subdir = to_datetime(p.created_time) + "_" + p.shortcode
+        path = _down_containers(p, dest, subdir=p.shortcode, force_subdir=dump_metadata)
+        if dump_metadata:
+            filename = p.shortcode + ".json"
+            metadata_file = os.path.join(path, p.shortcode, filename)
+            self._logger.debug("-> [{0}] dump metadata".format(filename))
+            with open(metadata_file, "w+") as f:
+                json.dump(p.as_dict(), f, indent=4)
+        if path:
+            self._logger.info("Destination: {0}".format(path))
+        return path
+
+    def download_story(self, name: str = None, tag: str = None, dest: str = None) -> str:
+        story = self.get_story(name=name, tag=tag)
+        self._logger.info("Downloading stories of {0} with {1} media...".format(name or "#" + tag, len(story)))
+        path = _down_containers(story, dest, directory=("@" if name else "#") + story.name + "(story)")
+        if path:
+            self._logger.info("Destination: {0}".format(path))
+        return path
+
+    def download_user_profile_pic(self, name: str, dest: str = None) -> str:
+        user = self.get_profile(name)
+        self._logger.info("Downloading {0}'s profile picture...".format(name))
+        path = _down_from_src(user.profile_pic, name, dest)
+        if path:
+            self._logger.info("Destination: {0}".format(path))
+        return path
+
+    def download_user_timeline_posts(self, name: str, count: int = 50, only: str = None, dest: str = None,
+                                     preload: bool = False, dump_metadata: bool = False) -> str or None:
+        """Download a user's timeline posts.
+
+        Arguments:
+            name: the user's username
+            count: maximum limit of posts you want to download
+            only: only this type of posts will be downloaded [image, video, sidecar]
+            dest: path to the destination of the download files
+            preload: convert all items in the iterable to `Post` instances before downloading if True
+            dump_metadata: force create a sub directory of the post and dump metadata of each post to a file inside if True
+
+        Returns:
+            path: full path to the download destination, or None if download failed
+        """
+        posts = self.get_user_timeline_posts(name, count, only, preload)
+        if not posts:
+            return None
+        return _down_posts(posts, dest, directory="@" + name, dump_metadata=dump_metadata)
+
+    def download_self_saved_posts(self, count: int = 50, only: str = None, dest: str = None, preload: bool = False,
+                                  dump_metadata: bool = False) -> str or None:
+        """Download self saved posts.
+
+        Arguments:
+            count: maximum limit of posts you want to download
+            only: only this type of posts will be downloaded [image, video, sidecar]
+            dest: path to the destination of the download files
+            preload: convert all items in the iterable to `Post` instances before downloading if True
+            dump_metadata: force create a sub directory of the post and dump metadata of each post to a file inside if True
+
+        Returns:
+            path: full path to the download destination, or None if download failed
+        """
+        posts = self.get_self_saved_posts(count, only, preload)
+        if not posts:
+            return None
+        return _down_posts(posts, dest, directory="saved", dump_metadata=dump_metadata)
+
+    def download_user_tagged_posts(self, name: str, count: int = 50, only: str = None, dest: str = None,
+                                   preload: bool = False, dump_metadata: bool = False) -> str or None:
+        """Download posts that tagged the user.
+
+        Arguments:
+            name: the user's username
+            count: maximum limit of posts you want to download
+            only: only this type of posts will be downloaded [image, video, sidecar]
+            dest: path to the destination of the download files
+            preload: convert all items in the iterable to `Post` instances before downloading if True
+            dump_metadata: force create a sub directory of the post and dump metadata of each post to a file inside if True
+
+        Returns:
+            path: full path to the download destination, or None if download failed
+        """
+        posts = self.get_user_tagged_posts(name, count, only, preload)
+        if not posts:
+            return None
+        return _down_posts(posts, dest, directory="@" + name + "(tagged)", dump_metadata=dump_metadata)
+
+    def download_hashtag_posts(self, tag: str, count: int = 50, only: str = None, dest: str = None,
+                               preload: bool = False, dump_metadata: bool = False) -> str or None:
+        """Download posts with the given tag.
+
+        Arguments:
+            tag: tag name
+            count: maximum limit of posts you want to download
+            only: only this type of posts will be downloaded [image, video, sidecar]
+            dest: path to the destination of the download files
+            preload: convert all items in the iterable to `Post` instances before downloading if True
+            dump_metadata: force create a sub directory of the post and dump metadata of each post to a file inside if True
+
+        Returns:
+            path: full path to the download destination, or None if download failed
+        """
+        posts = self.get_hashtag_posts(tag, count, only, preload)
+        if not posts:
+            return
+        return _down_posts(posts, dest, directory="#" + tag, dump_metadata=dump_metadata)
+
+    def download_explore_posts(self, count: int = 50, only: str = None, dest: str = None, preload: bool = False,
+                               dump_metadata: bool = False) -> str or None:
+        """Download 'explore' posts feed in the 'discover' section.
+        * Download to a directory named
+
+        Arguments:
+            count: maximum limit of posts you want to download
+            only: only this type of posts will be downloaded [image, video, sidecar]
+            dest: path to the destination of the download files
+            preload: convert all items in the iterable to `Post` instances before downloading if True
+            dump_metadata: force create a sub directory of the post and dump metadata of each post to a file inside if True
+
+        Returns:
+            path: full path to the download destination, or None if download failed
+        """
+        posts = self.get_explore_posts(count, only, preload)
+        if not posts:
+            return None
+        return _down_posts(posts, dest, directory="explore", dump_metadata=dump_metadata)

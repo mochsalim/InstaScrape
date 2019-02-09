@@ -2,17 +2,18 @@ import argparse
 import traceback
 import time
 import json
+import sys
+import os
+import logging
 from datetime import datetime
 from contextlib import contextmanager
 from getpass import getpass
-from copy import deepcopy
 
 from colorama import (Fore, Style)
 
 from . import ACCOUNT_DIR
 from .__version__ import __version__
 from instascrape.instascraper import InstaScraper
-from instascrape.download import *
 from instascrape.utils import (load_obj, dump_obj, remove_obj)
 from instascrape.logger import set_logger
 from instascrape.exceptions import InstaScrapeError
@@ -31,12 +32,14 @@ def handle_errors(current_function_name: str = None, is_final: bool = False):
             err_print("Interrupted by user")
             ask("Contiune to next job")
     except InstaScrapeError as e:
+        logger = logging.getLogger("instascrape")
         exc = sys.exc_info()
         exc = "".join(traceback.format_exception(*exc))
         logger.error(str(e))
         logger.debug(str(exc))
         info_print("(✗) Failed:", text="{0} because {1}".format(current_function_name + "()" + Fore.LIGHTRED_EX, Fore.RESET + Style.BRIGHT + str(e)), color=Fore.LIGHTRED_EX)
     except Exception as e:
+        logger = logging.getLogger("instascrape")
         logger.critical(str(e), exc_info=True)
         info_print("(✗) Failed:", text="{0} because {1}".format(current_function_name + "()" + Fore.LIGHTRED_EX, Fore.RESET + Style.BRIGHT + str(e)), color=Fore.LIGHTRED_EX)
     finally:
@@ -335,12 +338,12 @@ def down(args: argparse.Namespace):
 
         if target[0] == "@":  # user
             if target[1] == "#":  # tagged
-                jobs.append((download_user_tagged_posts, (target[2:],), kwargs, target))
+                jobs.append((insta.download_user_tagged_posts, (target[2:],), kwargs, target))
             else:  # timeline
-                jobs.append((download_user_timeline_posts, (target[1:],), kwargs, target))
+                jobs.append((insta.download_user_timeline_posts, (target[1:],), kwargs, target))
 
         elif target[0] == "#":  # hashtag
-            jobs.append((download_hashtag_posts, (target[1:],), kwargs, target))
+            jobs.append((insta.download_hashtag_posts, (target[1:],), kwargs, target))
 
         elif target[0] == "%":  # story
             if target[1] == "@":  # user
@@ -350,15 +353,15 @@ def down(args: argparse.Namespace):
             else:
                 parser.error("illegal symbol parsed in argument: '{0}'".format(target))
             has_individual = True
-            jobs.append((download_story, story_args, ex_kwargs, target))
+            jobs.append((insta.download_story, story_args, ex_kwargs, target))
 
         elif target[0] == ":":  # post
             has_individual = True
-            jobs.append((download_post, (target[1:],), ex_kwargs, target))
+            jobs.append((insta.download_post, (target[1:],), ex_kwargs, target))
 
         elif target[0] == "/":  # profile-pic
             has_individual = True
-            jobs.append((download_user_profile_pic, (target[1:],), ex_kwargs, target))
+            jobs.append((insta.download_user_profile_pic, (target[1:],), ex_kwargs, target))
 
         elif target[0].isalpha() or target[0].isdigit():  # profile
             # specify a new path as to create a seperate directory for storing the whole profile media
@@ -368,10 +371,10 @@ def down(args: argparse.Namespace):
             profile_kwargs.update({"dest": profile_path})
             profile_ex_kwargs.update({"dest": profile_path})
             temp = [
-                (download_user_timeline_posts, (target,), profile_kwargs),
-                (download_user_tagged_posts, (target,), profile_kwargs),
-                (download_story, (target, None), profile_ex_kwargs),
-                (download_user_profile_pic, (target,), profile_ex_kwargs)
+                (insta.download_user_timeline_posts, (target,), profile_kwargs),
+                (insta.download_user_tagged_posts, (target,), profile_kwargs),
+                (insta.download_story, (target, None), profile_ex_kwargs),
+                (insta.download_user_profile_pic, (target,), profile_ex_kwargs)
             ]
             profile_jobs.append((target, temp))
 
@@ -379,9 +382,9 @@ def down(args: argparse.Namespace):
             parser.error("illegal symbol parsed in argument: '{0}'".format(target))
 
     if args.saved:  # saved
-        jobs.append((download_self_saved_posts, (), kwargs, None))
+        jobs.append((insta.download_self_saved_posts, (), kwargs, None))
     if args.explore:  # explore
-        jobs.append((download_explore_posts, (), kwargs, None))
+        jobs.append((insta.download_explore_posts, (), kwargs, None))
 
     # Handle profiles download
     if profile_jobs and jobs:
@@ -405,7 +408,7 @@ def down(args: argparse.Namespace):
                 with handle_errors(current_function_name=function.__name__, is_final=i == len(jobs)):
                     info_print("(↓) {0}".format(function.__name__.title().replace("_", " ")), text=target if target else None, color=Fore.LIGHTBLUE_EX)
                     # deepcopy `InstaScraper` object to ensure better safety
-                    path = function(deepcopy(insta), *arguments, **kwargs)
+                    path = function(*arguments, **kwargs)
                     if path is None:
                         # no download destination path returned because the download failed
                         info_print("(✗) Download Failed", color=Fore.LIGHTRED_EX)
@@ -421,7 +424,7 @@ def down(args: argparse.Namespace):
             with handle_errors(current_function_name=function.__name__, is_final=i == len(jobs)):
                 info_print("(↓) {0}".format(function.__name__.title().replace("_", " ")), text=target if target else None, color=Fore.LIGHTBLUE_EX)
                 # deepcopy `InstaScraper` object to ensure better safety
-                path = function(deepcopy(insta), *arguments, **kwargs)
+                path = function(*arguments, **kwargs)
                 if path is None:
                     # no download destination path returned because of download failed
                     info_print("(✗) Download Failed", color=Fore.LIGHTRED_EX)
