@@ -5,7 +5,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 # Package Meta-Data
 NAME = "instascrape-ax"
-DESCRIPTION = "A fast and lightweight Instagram media downloader that scrapes the web"
+DESCRIPTION = "A fast and lightweight Instagram media downloader"
 URL = "https://github.com/AlphaXenon/InstaScrape"
 EMAIL = "tony.chan2342@gmail.com"
 AUTHOR = "AlphaXenon"
