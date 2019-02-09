@@ -27,16 +27,16 @@ def progress(total: int = None, desc: str = None, ascii: bool = True):
         bar = Dummy()
     else:
         bar = tqdm(total=total, file=sys.stdout, unit="item", ascii=ascii, dynamic_ncols=True,
-                   desc=("\033[7m" + "[" + desc.center(11) + "]" + Style.RESET_ALL) if desc else (Back.LIGHTCYAN_EX + "[" + "Downloading".center(11) + "]" + Style.RESET_ALL),
+                   desc=("\033[7m" + "[" + desc.center(11) + "]" + Style.RESET_ALL) if desc else (Back.YELLOW + Fore.BLACK + "[" + "Downloading".center(11) + "]" + Style.RESET_ALL),
                    bar_format="{desc} {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} " + Fore.LIGHTBLACK_EX + "[{elapsed}<{remaining}{postfix}]" + Fore.RESET)
 
     try:
         yield bar
     except (Exception, KeyboardInterrupt):
-        bar.set_description_str(Back.LIGHTRED_EX + "[" + "Failed".center(11) + "]" + Back.RESET)
+        bar.set_description_str(Back.RED + Fore.BLACK + "[" + "Failed".center(11) + "]" + Style.RESET_ALL)
         raise
     else:
-        bar.set_description_str(Back.GREEN + "[" + "Completed".center(11) + "]" + Back.RESET)
+        bar.set_description_str(Back.GREEN + Fore.BLACK + "[" + "Completed".center(11) + "]" + Style.RESET_ALL)
     finally:
         bar.close()
 
