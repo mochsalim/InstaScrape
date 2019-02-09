@@ -195,7 +195,7 @@ def _down_posts(posts, dest: str = None, directory: str = None, dump_metadata: b
             # dump metadata
             if dump_metadata:
                 filename = subdir + ".json"
-                metadata_file = os.path.join(path, p.shortcode, filename)  # path inside the sub directory
+                metadata_file = os.path.join(path, subdir, filename)  # path inside the sub directory
                 logger.debug("-> [{0}] dump metadata".format(filename))
                 with open(metadata_file, "w+") as f:
                     json.dump(p.as_dict(), f, indent=4)
@@ -212,7 +212,7 @@ def download_post(insta, shortcode: str, dest: str = None, dump_metadata: bool =
     path = _down_containers(p, dest, subdir=p.shortcode, force_subdir=dump_metadata)
     if dump_metadata:
         filename = p.shortcode + ".json"
-        metadata_file = os.path.join(path, shortcode, filename)
+        metadata_file = os.path.join(path, p.shortcode, filename)
         logger.debug("-> [{0}] dump metadata".format(filename))
         with open(metadata_file, "w+") as f:
             json.dump(p.as_dict(), f, indent=4)

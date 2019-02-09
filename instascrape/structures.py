@@ -566,8 +566,6 @@ class Story(BaseStructure):
         if not data:
             raise StoryNotFound(self.owner_user_id or self.tag)
         self.data = data[0]
-        with open("file.json", "w+") as f:
-            json.dump(self.data, f, indent=4)
 
     @property
     def typename(self) -> str:
