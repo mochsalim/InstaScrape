@@ -1,6 +1,6 @@
 <h1 align="center">InstaScrape</h1>
 
-<p align="center"><em>A fast and lightweight Instagram media downloader</em></p>
+<p align="center"><em>A fast and lightweight Instagram media downloader (without the need of API)</em></p>
 
 <p align="center"><img src="./demo.gif" width=70% alt="screenshot"></p>
 
