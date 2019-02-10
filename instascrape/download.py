@@ -160,7 +160,8 @@ def _down_containers(structure, dest: str = None, directory: str = None, subdir:
             # check if the file / directory already exists
             if os.path.isfile(os.path.join(path, filename + ".jpg")) or os.path.isfile(os.path.join(path, filename + ".mp4")):
                 logger.debug("file already downloaded, skipped !")
-                time.sleep(0.5)
+                bar.set_description_str(Back.BLUE + Fore.BLACK + "[" + "Exists".center(11) + "]" + Style.RESET_ALL)
+                time.sleep(0.3)
             else:
                 # download
                 _down_from_src(c.src, filename, path)

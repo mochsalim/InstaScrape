@@ -172,7 +172,7 @@ class BaseStructure:
                 item = extractor(edge["node"], **kwargs)
                 if item is False:
                     logger.debug("broke loop because extractor returned a False")
-                    if len(results) < count:
+                    if len(results) < total:
                         logger.warning("Only {0} items found.".format(len(results)))
                     return
                 if item:
@@ -193,7 +193,7 @@ class BaseStructure:
             page_i += 1
             time.sleep(random.randrange(3))  # delay: prevent getting rate limited by Instagram
 
-        if len(results) < count:
+        if len(results) < total:
             logger.warning("Only {0} items found.".format(len(results)))
 
     def as_dict(self) -> dict:
