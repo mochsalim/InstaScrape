@@ -335,7 +335,7 @@ def down(args: argparse.Namespace):
             timestamp_limit["after"] = to_timestamp(after_date)
     except ValueError:
         parser.error("incorrect datetime format, should be `YY-mm-dd-h:m:s`")
-    if timestamp_limit["after"] >= timestamp_limit["before"]:
+    if all((before_date, after_date)) and timestamp_limit["after"] >= timestamp_limit["before"]:
         parser.error("timestamp limit conflict: `after` is greater than or equal to `before`")
 
     kwargs = {"count": count or 50, "only": only, "dest": dest, "preload": preload, "dump_metadata": dump_metadata,
