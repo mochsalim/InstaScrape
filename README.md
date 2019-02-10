@@ -2,7 +2,7 @@
 
 <p align="center"><em>A fast and lightweight Instagram media downloader (without the need of API)</em></p>
 
-<p align="center"><img src="./demo.gif" width=70% alt="screenshot"></p>
+<p align="center"><img src="./demo.gif?raw=true" width=70%></p>
 
 <p align="center">
   <a href="https://pypi.python.org/pypi/InstaScrape"><img src="https://img.shields.io/pypi/v/instascrape-ax.svg"></a>
@@ -238,7 +238,7 @@ Example output of `$ instascrape dump :BtlyjD2lWvL`:
 
 ## Contributing
 
-Feel free to open issues for bug reports and feature requests, or even make pull requests !
+Feel free to open issues for bug reports and feature requests, or even better, make pull requests!
 If you are reporting bugs, please include the log file in `~/.instascrape/instascrape.log`.
 
 ## Disclaimer
