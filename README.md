@@ -215,6 +215,8 @@ Example output of `$ instascrape dump :BtlyjD2lWvL`:
 * `--dest <path/to/directory>` : set path to the download destination
 * `--preload` : collect the initial data of all items (using thread workers) before downloading them, might help increase the speed.
 *WARN: use at your own risk, this option is unstable and should only be used when downloading small amount of posts, otherwise you may get rate limited*.
+* `--before-date <datetime>` : download posts created before this datetime, can be used with `after-date` (`{YY-mm-dd-h:m:s}`)
+* `--after-date <datetime>` : download posts created after this datetime, can be used with `before-date` (`{YY-mm-dd-h:m:s}`)
 * `--dump-metadata` : download posts along with their metadata dumped in JSON files
 
 ***NOTE:** Posts downloaded will be named in the pattern `{YY-mm-dd-h:m:s}_{shortcode}` e.g. `2019-02-06-15:57:39_BtiGPG_AhXA`.*
@@ -231,7 +233,7 @@ Example output of `$ instascrape dump :BtlyjD2lWvL`:
 
 ## Todos
 
-1. ☐ Download posts after a particular timestamp
+1. ☑ Download posts created between two particular timestamps
 2. ☐ Read shortcodes and usernames from file
 3. ☐ Download story highlights
 4. ☐ Guest login
