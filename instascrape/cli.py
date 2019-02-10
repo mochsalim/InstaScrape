@@ -14,7 +14,7 @@ from colorama import (Fore, Style)
 from . import ACCOUNT_DIR
 from instascrape.__version__ import __version__
 from instascrape.instascraper import InstaScraper
-from instascrape.utils import (load_obj, dump_obj, remove_obj)
+from instascrape.utils import (load_obj, dump_obj, remove_obj, to_timestamp)
 from instascrape.logger import set_logger
 from instascrape.exceptions import InstaScrapeError
 
@@ -314,6 +314,8 @@ def down(args: argparse.Namespace):
     dest = args.dest
     preload = args.preload
     dump_metadata = args.dump_metadata
+    before_date = args.before_date
+    after_date = args.after_date
 
     if not targets and not args.explore and not args.saved:
         parser.error("at least one media type must be specified")
@@ -325,7 +327,19 @@ def down(args: argparse.Namespace):
 
     # ========== Prepare arguments & jobs ==========
 
-    kwargs = {"count": count or 50, "only": only, "dest": dest, "preload": preload, "dump_metadata": dump_metadata}
+    timestamp_limit = {}
+    try:
+        if before_date:
+            timestamp_limit["before"] = to_timestamp(before_date)
+        if after_date:
+            timestamp_limit["after"] = to_timestamp(after_date)
+    except ValueError:
+        parser.error("incorrect datetime format, should be `YY-mm-dd-h:m:s`")
+    if timestamp_limit["after"] >= timestamp_limit["before"]:
+        parser.error("timestamp limit conflict: `after` is greater than or equal to `before`")
+
+    kwargs = {"count": count or 50, "only": only, "dest": dest, "preload": preload, "dump_metadata": dump_metadata,
+              "timestamp_limit": timestamp_limit or None}
     ex_kwargs = {"dest": dest}  # -> kwargs for individuals
 
     has_individual = False  # -> has one of 'story', 'post', 'profile-pic'
@@ -514,6 +528,10 @@ def main(argv=None):
     down_options.add_argument("--preload", action="store_true",
                               help="Might help increase the speed of download by collecting the initial data of all items before downloading "
                                    "(WARN: this option is unstable and should only be used when downloading a small amount of posts, might get rate limited by Instagram)")
+    down_options.add_argument("--before-date", type=str, metavar="<YY-mm-dd-h:m:s>",
+                              help="Download post only if it was created before this date")
+    down_options.add_argument("--after-date", type=str, metavar="<YY-mm-dd-h:m:s>",
+                              help="Download post only if it was created after this date")
     down_options.add_argument("--dump-metadata", action="store_true",
                               help="Dump metadata of each post to JSON files")
 

@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import json
+import time
 from contextlib import contextmanager
 
 import requests
@@ -158,7 +159,8 @@ def _down_containers(structure, dest: str = None, directory: str = None, subdir:
 
             # check if the file / directory already exists
             if os.path.isfile(os.path.join(path, filename + ".jpg")) or os.path.isfile(os.path.join(path, filename + ".mp4")):
-                logger.debug("[{0}] file already downloaded, skipped !".format(filename))
+                logger.debug("file already downloaded, skipped !")
+                time.sleep(1)
             else:
                 # download
                 _down_from_src(c.src, filename, path)

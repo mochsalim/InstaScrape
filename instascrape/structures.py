@@ -13,24 +13,46 @@ __all__ = ("BaseStructure", "Profile", "Hashtag", "Explore", "Post", "Story")
 logger = logging.getLogger("instascrape")
 
 
-def shortcode_extractor(data: dict, only: str = None) -> str or None:
+def shortcode_extractor(data: dict, only: str = None, timestamp_limit: dict = None):
     """Called by `self._scrape_pages()` to extract shortcode from node data depending on the typename.
 
     Returns:
         str: if data satisfies the conditions, extracted data will be returned.
+        None: if data does not satisfy the conditions
+        False: if need to stop the process
     """
     shortcode = data["shortcode"]
-    if not only:
+    if not only and not timestamp_limit:  # no filter conditions
         return shortcode
+
     # filter option `only`
-    typename = data.get("__typename")
-    types = {
-        "image": "GraphImage",
-        "video": "GraphVideo",
-        "sidecar": "GraphSidecar"
-    }
-    if typename == types.get(only):
-        return shortcode
+    if only:
+        typename = data.get("__typename")
+        types = {
+            "image": "GraphImage",
+            "video": "GraphVideo",
+            "sidecar": "GraphSidecar"
+        }
+        if typename != types.get(only):
+            return None
+
+    if timestamp_limit:
+        before = timestamp_limit.get("before")
+        after = timestamp_limit.get("after")
+        if all((before, after)) and after >= before:
+            raise ValueError("timestamp limit conflict: `after` is greater than or equal to `before`")
+
+        timestamp = data["taken_at_timestamp"]
+        if after and timestamp < after:
+            # already at the lowest limit, break the loop
+            return False
+
+        if before and timestamp > before:
+            return None
+        if after and timestamp < after:
+            return None
+
+    return shortcode
 
 
 class BaseStructure:
@@ -148,12 +170,17 @@ class BaseStructure:
             # yield extracted items
             for edge in data["edges"]:
                 item = extractor(edge["node"], **kwargs)
+                if item is False:
+                    logger.debug("broke loop because extractor returned a False")
+                    if len(results) < count:
+                        logger.warning("Only {0} items found.".format(len(results)))
+                    return
                 if item:
                     results.append(item)
                     yield item
                 # stop ?
                 if len(results) >= count:
-                    break
+                    return
 
             # query next page if not enough
             if data["page_info"]["has_next_page"] and len(results) < count and len(results) < total:
@@ -165,6 +192,9 @@ class BaseStructure:
                 break
             page_i += 1
             time.sleep(random.randrange(3))  # delay: prevent getting rate limited by Instagram
+
+        if len(results) < count:
+            logger.warning("Only {0} items found.".format(len(results)))
 
     def as_dict(self) -> dict:
         """Maps properties to a dictionary"""
@@ -278,36 +308,39 @@ class Profile(BaseStructure):
         """Amount of timeline posts this user has."""
         return self.data["edge_owner_to_timeline_media"]["count"]
 
-    def fetch_timeline_posts(self, count: int = 50, only: str = None):
+    def fetch_timeline_posts(self, count: int = 50, only: str = None, timestamp_limit: dict = None):
         """Fetches a user's timeline posts. Call the low-level method `self.fetch_posts`.
 
         Arguments:
             count: the maximum count of posts you want to fetch
             only: [image/video] filter out other types of posts, only get posts of this particular type
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
         """
         param = {"id": self.user_id}
-        return self._scrape_pages(shortcode_extractor, QUERY_USER_MEDIA_URL, param, "edge_owner_to_timeline_media", count, only=only)
+        return self._scrape_pages(shortcode_extractor, QUERY_USER_MEDIA_URL, param, "edge_owner_to_timeline_media", count, only=only, timestamp_limit=timestamp_limit)
 
-    def fetch_saved_posts(self, count: int = 50, only: str = None):
+    def fetch_saved_posts(self, count: int = 50, only: str = None, timestamp_limit: dict = None):
         """Fetches self saved posts. Calls the low-level method `self.fetch_posts`.
         * This method only works for self.
 
         Arguments:
             count: the maximum count of posts you want to fetch
             only: [image/video] filter out other types of posts, only get posts of this particular type
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
         """
         param = {"id": self.user_id}
-        return self._scrape_pages(shortcode_extractor, QUERY_USER_SAVED_URL, param, "edge_saved_media", count, only=only)
+        return self._scrape_pages(shortcode_extractor, QUERY_USER_SAVED_URL, param, "edge_saved_media", count, only=only, timestamp_limit=timestamp_limit)
 
-    def fetch_tagged_posts(self, count: int = 50, only: str = None):
+    def fetch_tagged_posts(self, count: int = 50, only: str = None, timestamp_limit: dict = None):
         """Fetches posts that tagged this user. Calls the low-level method `self.fetch_posts`.
 
         Arguments:
             count: the maximum count of posts you want to fetch
             only: [image/video] filter out other types of posts, only get posts of this particular type
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
         """
         param = {"id": self.user_id}
-        return self._scrape_pages(shortcode_extractor, QUERY_USER_TAGGED_URL, param, "edge_user_to_photos_of_you", count, new=True, only=only)
+        return self._scrape_pages(shortcode_extractor, QUERY_USER_TAGGED_URL, param, "edge_user_to_photos_of_you", count, new=True, only=only, timestamp_limit=timestamp_limit)
 
     def fetch_followers(self, count: int = 50):
         """Fetches this user's followers in usernames.
@@ -342,15 +375,16 @@ class Hashtag(BaseStructure):
     def __repr__(self):
         return "<Hashtag tag={0}>".format(self.tag)
 
-    def fetch_posts(self, count: int = 50, only: str = None):
+    def fetch_posts(self, count: int = 50, only: str = None, timestamp_limit: dict = None):
         """Fetches posts that tagged the given hashtag name.
 
         Arguments:
             count: the maximum count of posts you want to fetch
             only: [image/video] filter out other types of posts, only get posts of this particular type
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
         """
         param = {"tag_name": self.tag}
-        return self._scrape_pages(shortcode_extractor, QUERY_HASHTAG_URL, param, "edge_hashtag_to_media", count, new=True, only=only)
+        return self._scrape_pages(shortcode_extractor, QUERY_HASHTAG_URL, param, "edge_hashtag_to_media", count, new=True, only=only, timestamp_limit=timestamp_limit)
 
 
 class Explore(BaseStructure):
@@ -366,15 +400,16 @@ class Explore(BaseStructure):
     def __repr__(self):
         return "<Explore>"
 
-    def fetch_posts(self, count: int = 50, only: str = None):
+    def fetch_posts(self, count: int = 50, only: str = None, timestamp_limit: dict = None):
         """Fetches posts in explore feed.
 
         Arguments:
             count: the maximum count of posts you want to fetch
             only: [image/video] filter out other types of posts, only get posts of this particular type
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
         """
         param = {"first": count if count <= 50 else 50}
-        return self._scrape_pages(shortcode_extractor, QUERY_DISCOVER_URL, param, "edge_web_discover_media", count, new=True, only=only)
+        return self._scrape_pages(shortcode_extractor, QUERY_DISCOVER_URL, param, "edge_web_discover_media", count, new=True, only=only, timestamp_limit=timestamp_limit)
 
 
 # ========================

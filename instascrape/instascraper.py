@@ -164,7 +164,9 @@ class InstaScraper(LoggerMixin):
         self._logger.debug("Logged out")
         return True
 
-    # ==================Individuals==================
+    # =============Get Methods===============
+
+    # --------------Individuals---------------
 
     def get_profile(self, name: str) -> Profile:
         """Get a Profile object by a user's username."""
@@ -189,15 +191,16 @@ class InstaScraper(LoggerMixin):
         self._logger.info("Getting {0} story data...".format("#" + tag if tag else "@" + name + "'s"))
         return Story(self._session, user_id=user_id, tag=tag)
 
-    # ==============Profile Based===================
+    # ------------Profile Based--------------
 
-    def get_user_timeline_posts(self, name: str, count: int = 50, only: str = None, preload: bool = False):
+    def get_user_timeline_posts(self, name: str, count: int = 50, only: str = None, timestamp_limit: dict = None, preload: bool = False):
         """Get a user's timeline posts in the form of `Post` objects.
 
         Arguments:
             name: the user's username
             count: maximum limit of posts you want to get
             only: only this type of posts will be downloaded [image, video, sidecar]
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
             preload: converts all items yielded from the generator to `Post` instances and returns a list if True
 
         Returns:
@@ -207,7 +210,7 @@ class InstaScraper(LoggerMixin):
         assert name, "Empty arguments"
         self._logger.info("Fetching @{0}'s timeline posts...".format(name))
         user = self.get_profile(name)
-        posts = user.fetch_timeline_posts(count, only)
+        posts = user.fetch_timeline_posts(count, only, timestamp_limit)
         if next(posts) is False:
             msg = "No timeline posts found for @{0}."
             if user.is_private:
@@ -219,12 +222,13 @@ class InstaScraper(LoggerMixin):
         else:
             return instance_generator(self._session, Post, posts)
 
-    def get_self_saved_posts(self, count: int = 50, only: str = None, preload: bool = False):
+    def get_self_saved_posts(self, count: int = 50, only: str = None, timestamp_limit: dict = None, preload: bool = False):
         """Get self saved posts in the form of `Post` objects.
 
         Arguments:
             count: maximum limit of posts you want to get
             only: only this type of posts will be downloaded [image, video, sidecar]
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
             preload: converts all items yielded from the generator to `Post` instances and returns a list if True
 
         Returns:
@@ -234,7 +238,7 @@ class InstaScraper(LoggerMixin):
         assert self.my_username, "Empty arguments"
         self._logger.info("Fetching @{0}'s saved posts...".format(self.my_username))
         user = self.get_profile(self.my_username)
-        posts = user.fetch_saved_posts(count, only)
+        posts = user.fetch_saved_posts(count, only, timestamp_limit)
         if next(posts) is False:
             self._logger.error("No saved posts found for @{0}.".format(self.my_username))
             return []
@@ -243,13 +247,14 @@ class InstaScraper(LoggerMixin):
         else:
             return instance_generator(self._session, Post, posts)
 
-    def get_user_tagged_posts(self, name: str, count: int = 50, only: str = None, preload: bool = False):
+    def get_user_tagged_posts(self, name: str, count: int = 50, only: str = None, timestamp_limit: dict = None, preload: bool = False):
         """Get posts that tagged the user in the form of `Post` objects.
 
         Arguments:
             name: the user's username
             count: maximum limit of posts you want to get
             only: only this type of posts will be downloaded [image, video, sidecar]
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
             preload: converts all items yielded from the generator to `Post` instances and returns a list if True
 
         Returns:
@@ -259,7 +264,7 @@ class InstaScraper(LoggerMixin):
         assert name, "Empty arguments"
         self._logger.info("Fetching @{0}'s tagged posts...".format(name))
         user = self.get_profile(name)
-        posts = user.fetch_tagged_posts(count, only)
+        posts = user.fetch_tagged_posts(count, only, timestamp_limit)
         if next(posts) is False:
             msg = "No tagged posts found for @{0}."
             if user.is_private:
@@ -331,15 +336,16 @@ class InstaScraper(LoggerMixin):
         else:
             return instance_generator(self._session, Profile, usernames)
 
-    # ================Feed Based=================
+    # -------------Feed Based---------------
 
-    def get_hashtag_posts(self, tag: str, count: int = 50, only: str = None, preload: bool = False):
+    def get_hashtag_posts(self, tag: str, count: int = 50, only: str = None, timestamp_limit: dict = None, preload: bool = False):
         """Get posts with the hashtag name in the form of `Post` objects.
 
         Arguments:
             tag: hashtag name
             count: maximum limit of posts you want to get
             only: only this type of posts will be downloaded [image, video, sidecar]
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
             preload: converts all items yielded from the generator to `Post` instances and returns a list if True
 
         Returns:
@@ -349,7 +355,7 @@ class InstaScraper(LoggerMixin):
         assert tag, "Empty arguments"
         self._logger.info("Fetching hashtag posts of #{0}...".format(tag))
         hashtag = Hashtag(self._session, tag)
-        posts = hashtag.fetch_posts(count, only)
+        posts = hashtag.fetch_posts(count, only, timestamp_limit)
         if next(posts) is False:
             self._logger.error("No hashtag posts found for #{0}.".format(tag))
             return []
@@ -358,12 +364,13 @@ class InstaScraper(LoggerMixin):
         else:
             return instance_generator(self._session, Post, posts)
 
-    def get_explore_posts(self, count: int = 50, only: str = None, preload: bool = False):
+    def get_explore_posts(self, count: int = 50, only: str = None, timestamp_limit: dict = None, preload: bool = False):
         """Get posts in the 'discover' feed section, in the form of `Post` objects.
 
         Arguments:
             count: maximum limit of posts you want to get
             only: only this type of posts will be downloaded [image, video, sidecar]
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
             preload: converts all items yielded from the generator to `Post` instances and returns a list if True
 
         Returns:
@@ -372,7 +379,7 @@ class InstaScraper(LoggerMixin):
         """
         self._logger.info("Fetching explore posts...")
         explore = Explore(self._session)
-        posts = explore.fetch_posts(count, only)
+        posts = explore.fetch_posts(count, only, timestamp_limit)
         if next(posts) is False:
             self._logger.error("No explore feed posts found.")
             return []
@@ -381,7 +388,7 @@ class InstaScraper(LoggerMixin):
         else:
             return instance_generator(self._session, Post, posts)
 
-    # ================Post Based=================
+    # ----------------Post Based---------------
 
     def get_post_likes(self, shortcode: str = None, count: int = 50, convert: bool = True, preload: bool = False):
         """Get likes of a Post in the form of usernames or `Profile` objects.
@@ -431,6 +438,8 @@ class InstaScraper(LoggerMixin):
 
     # ===========Download Methods===============
 
+    # -------------Individuals---------------
+
     def download_post(self, shortcode: str, dest: str = None, dump_metadata: bool = False) -> str:
         p = self.get_post(shortcode)
         self._logger.info("Downloading {0} with {1} media...".format(shortcode, len(p)))
@@ -462,7 +471,9 @@ class InstaScraper(LoggerMixin):
             self._logger.info("Destination: {0}".format(path))
         return path
 
-    def download_user_timeline_posts(self, name: str, count: int = 50, only: str = None, dest: str = None,
+    # -------------Profile Based--------------
+
+    def download_user_timeline_posts(self, name: str, count: int = 50, only: str = None, dest: str = None, timestamp_limit: dict = None,
                                      preload: bool = False, dump_metadata: bool = False) -> str or None:
         """Download a user's timeline posts.
 
@@ -471,37 +482,39 @@ class InstaScraper(LoggerMixin):
             count: maximum limit of posts you want to download
             only: only this type of posts will be downloaded [image, video, sidecar]
             dest: path to the destination of the download files
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
             preload: convert all items in the iterable to `Post` instances before downloading if True
             dump_metadata: force create a sub directory of the post and dump metadata of each post to a file inside if True
 
         Returns:
             path: full path to the download destination, or None if download failed
         """
-        posts = self.get_user_timeline_posts(name, count, only, preload)
+        posts = self.get_user_timeline_posts(name, count, only, timestamp_limit, preload)
         if not posts:
             return None
         return _down_posts(posts, dest, directory="@" + name, dump_metadata=dump_metadata)
 
-    def download_self_saved_posts(self, count: int = 50, only: str = None, dest: str = None, preload: bool = False,
-                                  dump_metadata: bool = False) -> str or None:
+    def download_self_saved_posts(self, count: int = 50, only: str = None, dest: str = None, timestamp_limit: dict = None,
+                                  preload: bool = False, dump_metadata: bool = False) -> str or None:
         """Download self saved posts.
 
         Arguments:
             count: maximum limit of posts you want to download
             only: only this type of posts will be downloaded [image, video, sidecar]
             dest: path to the destination of the download files
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
             preload: convert all items in the iterable to `Post` instances before downloading if True
             dump_metadata: force create a sub directory of the post and dump metadata of each post to a file inside if True
 
         Returns:
             path: full path to the download destination, or None if download failed
         """
-        posts = self.get_self_saved_posts(count, only, preload)
+        posts = self.get_self_saved_posts(count, only, timestamp_limit, preload)
         if not posts:
             return None
         return _down_posts(posts, dest, directory="saved", dump_metadata=dump_metadata)
 
-    def download_user_tagged_posts(self, name: str, count: int = 50, only: str = None, dest: str = None,
+    def download_user_tagged_posts(self, name: str, count: int = 50, only: str = None, dest: str = None, timestamp_limit: dict = None,
                                    preload: bool = False, dump_metadata: bool = False) -> str or None:
         """Download posts that tagged the user.
 
@@ -510,18 +523,21 @@ class InstaScraper(LoggerMixin):
             count: maximum limit of posts you want to download
             only: only this type of posts will be downloaded [image, video, sidecar]
             dest: path to the destination of the download files
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
             preload: convert all items in the iterable to `Post` instances before downloading if True
             dump_metadata: force create a sub directory of the post and dump metadata of each post to a file inside if True
 
         Returns:
             path: full path to the download destination, or None if download failed
         """
-        posts = self.get_user_tagged_posts(name, count, only, preload)
+        posts = self.get_user_tagged_posts(name, count, only, timestamp_limit, preload)
         if not posts:
             return None
         return _down_posts(posts, dest, directory="@" + name + "(tagged)", dump_metadata=dump_metadata)
 
-    def download_hashtag_posts(self, tag: str, count: int = 50, only: str = None, dest: str = None,
+    # ----------------Feed Based----------------
+
+    def download_hashtag_posts(self, tag: str, count: int = 50, only: str = None, dest: str = None, timestamp_limit: dict = None,
                                preload: bool = False, dump_metadata: bool = False) -> str or None:
         """Download posts with the given tag.
 
@@ -530,19 +546,20 @@ class InstaScraper(LoggerMixin):
             count: maximum limit of posts you want to download
             only: only this type of posts will be downloaded [image, video, sidecar]
             dest: path to the destination of the download files
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
             preload: convert all items in the iterable to `Post` instances before downloading if True
             dump_metadata: force create a sub directory of the post and dump metadata of each post to a file inside if True
 
         Returns:
             path: full path to the download destination, or None if download failed
         """
-        posts = self.get_hashtag_posts(tag, count, only, preload)
+        posts = self.get_hashtag_posts(tag, count, only, timestamp_limit, preload)
         if not posts:
             return
         return _down_posts(posts, dest, directory="#" + tag, dump_metadata=dump_metadata)
 
-    def download_explore_posts(self, count: int = 50, only: str = None, dest: str = None, preload: bool = False,
-                               dump_metadata: bool = False) -> str or None:
+    def download_explore_posts(self, count: int = 50, only: str = None, dest: str = None, timestamp_limit: dict = None,
+                               preload: bool = False, dump_metadata: bool = False) -> str or None:
         """Download 'explore' posts feed in the 'discover' section.
         * Download to a directory named
 
@@ -550,13 +567,14 @@ class InstaScraper(LoggerMixin):
             count: maximum limit of posts you want to download
             only: only this type of posts will be downloaded [image, video, sidecar]
             dest: path to the destination of the download files
+            timestamp_limit: only get posts created between these timestamps, {"before": <before timestamp>, "after", <after_timestamp>}
             preload: convert all items in the iterable to `Post` instances before downloading if True
             dump_metadata: force create a sub directory of the post and dump metadata of each post to a file inside if True
 
         Returns:
             path: full path to the download destination, or None if download failed
         """
-        posts = self.get_explore_posts(count, only, preload)
+        posts = self.get_explore_posts(count, only, timestamp_limit, preload)
         if not posts:
             return None
         return _down_posts(posts, dest, directory="explore", dump_metadata=dump_metadata)
