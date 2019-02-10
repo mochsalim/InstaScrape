@@ -12,7 +12,7 @@ from getpass import getpass
 from colorama import (Fore, Style)
 
 from . import ACCOUNT_DIR
-from .__version__ import __version__
+from instascrape.__version__ import __version__
 from instascrape.instascraper import InstaScraper
 from instascrape.utils import (load_obj, dump_obj, remove_obj)
 from instascrape.logger import set_logger
@@ -515,7 +515,7 @@ def main(argv=None):
                               help="Might help increase the speed of download by collecting the initial data of all items before downloading "
                                    "(WARN: this option is unstable and should only be used when downloading a small amount of posts, might get rate limited by Instagram)")
     down_options.add_argument("--dump-metadata", action="store_true",
-                              help="Dump metadata of each post to a file in a seperate directory")
+                              help="Dump metadata of each post to JSON files")
 
     args = parser.parse_args(argv[1:] if argv else None)
 

@@ -117,7 +117,7 @@ def _down_containers(structure, dest: str = None, directory: str = None, subdir:
         dest: destination path, one will be created if directory not found (must be a directory)
         directory: make a new directory inside `dest` to store all files
         subdir: name of the sub directory which is created when downloading multiple media
-        force_subdir: force create a sub directory and store all the media (used when dump_metadata=True)
+        (X) force_subdir: force create a sub directory and store all the media (used when dump_metadata=True)
 
     Returns:
         str: full path to the download destination
@@ -158,7 +158,7 @@ def _down_containers(structure, dest: str = None, directory: str = None, subdir:
 
             # check if the file / directory already exists
             if os.path.isfile(os.path.join(path, filename + ".jpg")) or os.path.isfile(os.path.join(path, filename + ".mp4")):
-                logger.debug("[{0}] file already exists, skipped !".format(os.path.join(path, filename)))
+                logger.debug("[{0}] file already downloaded, skipped !".format(filename))
             else:
                 # download
                 _down_from_src(c.src, filename, path)
@@ -174,7 +174,7 @@ def _down_posts(posts, dest: str = None, directory: str = None, dump_metadata: b
         posts: a generator which generates `Post` instances or a list that contains preloaded `Post` instances
         dest: download destination (should be a directory)
         directory: make a new directory inside `dest` to store all the files
-        dump_metadata: force create a sub directory of the post and dump metadata of each post to a file inside if True
+        dump_metadata: (force create a sub directory of the post and) dump metadata of each post to a file inside if True
 
     Returns:
         bool: True if file already exists and skipped the download process
@@ -191,11 +191,12 @@ def _down_posts(posts, dest: str = None, directory: str = None, dump_metadata: b
             logger.debug("Downloading {0} of {1} posts...".format(i, total or "(?)"))
             # download
             subdir = to_datetime(p.created_time) + "_" + p.shortcode
-            path = _down_containers(p, dest, directory, subdir, force_subdir=dump_metadata)  # `subdir` can also be the filename if the post has only one media
+            # NOTE: force_subdir if dump_metadata ?
+            path = _down_containers(p, dest, directory, subdir, force_subdir=False)  # `subdir` can also be the filename if the post has only one media
             # dump metadata
             if dump_metadata:
                 filename = subdir + ".json"
-                metadata_file = os.path.join(path, subdir, filename)  # path inside the sub directory
+                metadata_file = os.path.join(path, filename)  # path inside the sub directory
                 logger.debug("-> [{0}] dump metadata".format(filename))
                 with open(metadata_file, "w+") as f:
                     json.dump(p.as_dict(), f, indent=4)
