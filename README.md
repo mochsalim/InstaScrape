@@ -71,7 +71,7 @@ $ python3 setup.py install  # run setup.py and install it
 ### PyPI
 
 ```bash
-$ pip3 install instascrape-ax  # use 'instascrape-ax' as pypi package name to prevent name duplicate
+$ pip3 install instascrape-ax  # use 'instascrape-ax' as pypi package name to prevent naming conflicts
 ```
 
 ### Dependencies
