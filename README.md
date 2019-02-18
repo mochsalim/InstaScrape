@@ -233,10 +233,10 @@ Example output of `$ instascrape dump :BtlyjD2lWvL`:
 
 ## Todos
 
-1. ☑ Download posts created between two particular timestamps
-2. ☐ Read shortcodes and usernames from file
-3. ☐ Download story highlights
-4. ☐ Guest login
+1. [x] Download posts created between two particular timestamps
+2. [ ] Read shortcodes and usernames from file
+3. [ ] Download story highlights
+4. [ ] Guest login
 
 ## Contributing
 
