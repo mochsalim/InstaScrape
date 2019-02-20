@@ -425,7 +425,7 @@ class InstaScraper(LoggerMixin):
             count: maximum limit of comments you want to get
 
         Returns:
-            generator: yields dictionaries of {}
+            generator: yields dictionaries of {"username": <string>, "text": <string>, "time": <string>}
         """
         assert shortcode, "Empty arguments"
         self._logger.info("Fetching comments of :{0}".format(shortcode))

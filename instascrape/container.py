@@ -29,9 +29,9 @@ class Container:
     Fields:
         typename: (see docstring)
         thumbnail: url to the thumbnail
-        size: size of the media
+        size: x y dimensions of the media
         video_duration: only for 'GraphStoryVideo' and 'GraphVideo', returns None otherwise
-        resources: a list of dictionaries containing the `src` and info of the media
+        src: biggest in size source url
     """
     def __init__(self, data: dict):
         self.data = data

@@ -225,8 +225,8 @@ class Profile(BaseStructure):
         - fetch_followings()
     """
 
-    info_vars = ("url", "user_id", "username", "fullname", "biography", "website",
-                 "followers_count", "followings_count", "is_verified", "is_private", "profile_pic")
+    info_vars = ("url", "user_id", "username", "fullname", "biography", "website", "followers_count", "followings_count",
+                 "is_verified", "is_private", "profile_pic", "story_highlights_count", "timeline_posts_count")
 
     def __init__(self, session: requests.Session, name: str = ""):
         BaseStructure.__init__(self, session)
@@ -245,7 +245,7 @@ class Profile(BaseStructure):
         self.data = resp["graphql"]["user"]
 
     @property
-    def url(self):
+    def url(self) -> str:
         return "https://instagram.com/" + self.data["username"]
 
     @property

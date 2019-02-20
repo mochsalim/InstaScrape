@@ -22,6 +22,8 @@ def get_biggest_media(images: list) -> dict:
     Returns:
         dict: the element with the biggest size
     """
+    if not images:
+        return {"src": None}
     return sorted(images, key=lambda x: x["config_width"], reverse=True)[0]
 
 
