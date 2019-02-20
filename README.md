@@ -29,6 +29,11 @@
   - [Down](#down)
     - [Media Types](#media-types)
     - [Options](#options)
+- [API](#api)
+  - [InstaScraper Methods](#instascraper-methods)
+  - [Structure Fields](#structure-fields)
+  - [Container Fields](#container-fields)
+- [Typenames](#typenames)
 - [Todos](#todos)
 - [Contributing](#contributing)
 - [Disclaimer](#disclaimer)
@@ -211,17 +216,132 @@ Example output of `$ instascrape dump :BtlyjD2lWvL`:
 #### Options
 
 * `--count <integer>` : set maximum count of items you want to get
+
 * `--only {image, video, sidecar}` : filter out other types of posts, only download this type of posts (by typename)
+
 * `--dest <path/to/directory>` : set path to the download destination
+
 * `--preload` : collect the initial data of all items (using thread workers) before downloading them, might help increase the speed.
 *WARN: use at your own risk, this option is unstable and should only be used when downloading small amount of posts, otherwise you may get rate limited*.
+
 * `--before-date <datetime>` : download posts created before this datetime, can be used with `after-date` (`{YY-mm-dd-h:m:s}`)
+
 * `--after-date <datetime>` : download posts created after this datetime, can be used with `before-date` (`{YY-mm-dd-h:m:s}`)
+
 * `--dump-metadata` : download posts along with their metadata dumped in JSON files
 
 ***NOTE:** Posts downloaded will be named in the pattern `{YY-mm-dd-h:m:s}_{shortcode}` e.g. `2019-02-06-15:57:39_BtiGPG_AhXA`.*
 
 ---
+
+## API
+
+**InstaScrape** also provides an easy to use API with context manager implemented.
+
+```python
+from instascrape import InstaScraper
+
+# InstaScraper will login when entered
+with InstaScraper(username, password, user_agent=None, cookie=None, save_cookie=True, logout=True) as insta:
+    insta.do_something()
+# InstaScraper will automatically log out when closed
+```
+
+***NOTE:** You should always access `InstaScraper` with its context manager to ensure better security and prevent breaking.* 
+
+### InstaScraper Methods
+
+Top-level API methods.
+
+#### Account Interactions
+* login()
+* logout()
+
+#### Get Independent Structure
+* get_profile(name) -> structures.Profile
+* get_post(shortcode) -> structures.Post
+* get_story(name | tag) -> structures.Story
+
+#### Get loads of Structures
+For the methods in this section (unless specified), they returns a list if `preload=True`, a generator otherwise.
+
+* get_user_timeline_posts(...) -> [structures.Post]
+* get_self_saved_posts(...) -> [structures.Post]
+* get_user_tagged_posts(...) -> [structures.Post]
+* get_user_followers(...) -> [structures.Profile] if `convert=True`, list[str] otherwise
+* get_user_followings(...) -> [structures.Profile] if `convert=True`, list[str] otherwise
+* get_hashtag_posts(...) -> [structures.Post]
+* get_explore_posts(...) -> [structures.Post]
+* get_post_likes(...) -> [structures.Profile] if `convert=True`, list[str] otherwise
+* get_post_comments(...) -> list[dict{<username>, <text>, <time>}]
+
+#### Download Individuals
+
+All of the above methods (except `get_user_followers`, `get_user_followings`, `get_post_likes` and `get_post_comments`) each has a download method.
+
+For more details, see the docstring of each method.
+
+### Structure Fields
+
+The following properties are lower level.
+
+#### Profile
+
+1. as_dict() -> *dict*
+
+* url -> *str*
+* user_id -> *str*
+* username -> *str*
+* fullname -> *str*
+* biography -> *str*
+* website -> *str* or *None*
+* followers_count -> *int*
+* followings_count -> *int*
+* is_verified -> *bool*
+* is_private -> *bool*
+* profile_pic -> *str*
+* story_highlights_count -> *int*
+* timeline_posts_count -> *int*
+
+#### Post
+
+0. len()
+1. obtain_media() -> *list[container.Container]*
+2. as_dict() -> *dict*
+
+* typename -> *str*
+* url -> *str*
+* shortcode -> *str*
+* post_id -> *str*
+* location_name -> *str* or *None*
+* location_id -> *str* or *None*
+* owner_username -> *str*
+* owner_user_id -> *str*
+* created_time -> *float*
+* caption -> *str*
+* media_count -> *int*
+* likes_count -> *int*
+* comments_count -> *int*
+
+#### Story
+
+0. len()
+1. obtain_media() -> *list[container.Container]*
+
+* typename -> *str*
+* name -> *str*
+* id -> *str*
+* created_time_list -> *list[float]*
+
+### Container Fields
+
+This object is used to storing media source data for downloading. You do not need to deal with this object normally.
+
+* typename -> *str*
+* thumbnail -> *str*
+* size -> *dict*
+* video_duration -> *float* or *None*
+* resources -> *str*
 
 ## Terminology
 
@@ -230,6 +350,28 @@ Example output of `$ instascrape dump :BtlyjD2lWvL`:
 => *BtiGPG_AhXA* is the shortcode of this post.
 
 [2] In the world of `InstaScrape`, `@` and `:` are symbols to classify a User and a Post respectively.
+
+## Typenames
+
+Just for your reference.
+
+### User
+* GraphUser
+
+### Hashtag
+* GraphHashtag
+
+### Post
+* GraphSidecar (combination of videos or/and images)
+  * GraphImage
+  * GraphVideo
+
+### Story
+* GraphReel (user story)
+* GraphHighlightReel (user's story highlights)
+* GraphMASReel (hashtag story)
+  * GraphStoryImage
+  * GraphStoryVideo
 
 ## Todos
 
