@@ -76,7 +76,7 @@ $ python3 setup.py install  # run setup.py and install it
 ### PyPI
 
 ```bash
-$ pip3 install instascrape-ax  # use 'instascrape-ax' as pypi package name to prevent name duplicate
+$ pip3 install instascrape-ax  # use 'instascrape-ax' as pypi package name to prevent naming conflicts
 ```
 
 ### Dependencies
@@ -375,10 +375,10 @@ Just for your reference.
 
 ## Todos
 
-1. ☑ Download posts created between two particular timestamps
-2. ☐ Read shortcodes and usernames from file
-3. ☐ Download story highlights
-4. ☐ Guest login
+1. [x] Download posts created between two particular timestamps
+2. [ ] Read shortcodes and usernames from file
+3. [ ] Download story highlights
+4. [ ] Guest login
 
 ## Contributing
 
