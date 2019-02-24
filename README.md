@@ -48,6 +48,7 @@
 * Download posts along with their metadata
 * Job queue to handle multiple download tasks 🏃🏻‍
 * Good exceptions handling ⚠️
+* Download posts created in a particular time period 🕓
 
 ## Why
 
