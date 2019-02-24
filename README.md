@@ -116,12 +116,12 @@ This means you will not need to log in again the next time you use `$ instascrap
 
 `$ instascrape login [-u/--username <username> | -c/--cookie <path/to/file>]`
 
-* `-u/--username` : try loading a local cookie with this username, prompt for password if no cookie of this username found
+* `-u/--username` : try loading a local cookie with this username, prompt for password if no cookie of this username is found
 * `-c/--cookie` : provide a cookie file for the login process
 
-**InstaScrape** will store the auth cookies to avoid logging in every time you use `instascrape`. Excessive logins using different cookies everytime is a surefire way to get your account flagged for removal.
+**InstaScrape** will store the auth cookie to avoid logging in every time you use `instascrape`. Excessive logins using different cookies everytime is a surefire way to get your account flagged for removal.
 
-The saved auth cookies can be reused for up to 90 days. When the cookie is expired, you need to choose '(3) + Login New Account'. The expired cookie will be overwritten by the new valid cookie since then.
+The saved auth cookie can be reused for up to 90 days. When the cookie is expired, you need to choose '(3) + Login New Account'. The expired cookie will be overwritten by the new valid cookie since then.
 
 Example output, if `-u/--username` and `-c/--cookie` are not specified:
 ```
