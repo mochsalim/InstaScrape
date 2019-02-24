@@ -416,9 +416,8 @@ def down(args: argparse.Namespace):
     # Handle profile jobs
     if profile_jobs:
         for target, profiles in profile_jobs:
-            print("\n" + Style.BRIGHT + Fore.LIGHTCYAN_EX + "=> (~) " + "\033[4mDownloading User Profile:", Style.BRIGHT + "\033[4m@{0}".format(target))
+            print("\n" + Style.BRIGHT + Fore.LIGHTCYAN_EX + "> \033[4mDownloading User Profile:", Style.BRIGHT + "\033[4m@{0}".format(target))
             for i, (function, arguments, kwargs) in enumerate(profiles, start=1):
-                print()
                 with handle_errors(current_function_name=function.__name__, is_final=i == len(jobs)):
                     info_print("(↓) {0}".format(function.__name__.title().replace("_", " ")), text=target if target else None, color=Fore.LIGHTBLUE_EX)
                     # deepcopy `InstaScraper` object to ensure better safety
@@ -428,7 +427,7 @@ def down(args: argparse.Namespace):
                         info_print("(✗) Download Failed", color=Fore.LIGHTRED_EX)
                     else:
                         info_print("(✓) Download Completed =>", text=path, color=Fore.LIGHTGREEN_EX)
-            print("\n" + Style.BRIGHT + Fore.LIGHTCYAN_EX + "=> (*) " + "\033[4mCompleted User Profile:", Style.BRIGHT + "\033[4m@{0}".format(target))
+            print(Style.BRIGHT + Fore.LIGHTCYAN_EX + "> \033[4mCompleted User Profile:", Style.BRIGHT + "\033[4m@{0}".format(target))
 
     # Handle seperate jobs
     if jobs:
