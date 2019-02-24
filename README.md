@@ -10,7 +10,7 @@
   <a href="./LICENSE.txt"><img src="https://img.shields.io/github/license/AlphaXenon/InstaScrape.svg"></a>
 </p>
 
-**InstaScrape** is a lightweight command-line utility for downloading large amount of photos and videos ([see the list](#media-types)) from Instagram.
+**InstaScrape** is a lightweight command-line utility (and API) for downloading large amount of photos and videos ([see the list](#media-types)) from Instagram.
 
 ## Table of Contents
 - [Features](#features)
@@ -108,7 +108,7 @@ Options:
 Once you've logged into an account, `InstaScrape` will store its object `InstaScraper` to a pickle file for next time use. 
 This means you will not need to log in again the next time you use `$ instascrape ...`, unless you log out.
 
-*NOTE: The `InstaScraper` object is stored in a pickle file in `~/.instascrape/insta.pkl`.*
+***NOTE**: The `InstaScraper` object is stored in a pickle file in `~/.instascrape/insta.pkl`.*
 
 ---
 
@@ -118,6 +118,10 @@ This means you will not need to log in again the next time you use `$ instascrap
 
 * `-u/--username` : try loading a local cookie with this username, prompt for password if no cookie of this username found
 * `-c/--cookie` : provide a cookie file for the login process
+
+**InstaScrape** will store the auth cookies to avoid logging in every time you use `instascrape`. Excessive logins using different cookies everytime is a surefire way to get your account flagged for removal.
+
+The saved auth cookies can be reused for up to 90 days. When the cookie is expired, you need to choose '(3) + Login New Account'. The expired cookie will be overwritten by the new valid cookie since then.
 
 Example output, if `-u/--username` and `-c/--cookie` are not specified:
 ```
@@ -138,10 +142,10 @@ choice>
 ```
 * `*` asterisk annotated the current logged in user
 
-**NOTE:** In this situation, `user3` is logged in. The `InstaScraper` object is saved and being used by `user3`, but the cookie file is already gone.
+In this situation, `user3` is logged in. The `InstaScraper` object is saved and being used by `user3`, but the cookie file is already gone.
 That means once `user3` logged out, he will need to provide his credentials again to get a new cookie in order to log into Instagram.
 
-*NOTE: All cookies are stored in the `~/.instascrape/accounts/` directory.*
+***NOTE**: All cookies are stored in the `~/.instascrape/accounts/` directory.*
 
 ---
 
