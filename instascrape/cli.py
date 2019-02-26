@@ -448,7 +448,7 @@ def down(args: argparse.Namespace):
 def main(argv=None):
     global parser
     description = Style.BRIGHT + "    \033[4mInstaScrape" + Style.RESET_ALL + " -- A {f.LIGHTBLUE_EX}fast{f.RESET} and {f.LIGHTGREEN_EX}lightweight{f.RESET} Instagram media downloader".format(f=Fore)
-    epilog = Style.BRIGHT + "Made with {f.LIGHTRED_EX}❤{f.RESET} by AlphaXenon".format(f=Fore) + Style.RESET_ALL + " (https://github.com/AlphaXenon/InstaScrape)"
+    epilog = Style.BRIGHT + "Made with {f.LIGHTRED_EX}❤{f.RESET} by a1phat0ny".format(f=Fore) + Style.RESET_ALL + " (https://github.com/a1phat0ny/InstaScrape)"
     parser = argparse.ArgumentParser(prog="instascrape", description=description, epilog=epilog, allow_abbrev=False, formatter_class=argparse.RawTextHelpFormatter)
     parser._positionals.title = "Actions"
     parser._positionals.description = "Reminder: You may need to login first."
