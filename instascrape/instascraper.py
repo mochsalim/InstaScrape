@@ -212,10 +212,7 @@ class InstaScraper(LoggerMixin):
         user = self.get_profile(name)
         posts = user.fetch_timeline_posts(count, only, timestamp_limit)
         if next(posts) is False:
-            msg = "No timeline posts found for @{0}."
-            if user.is_private:
-                msg = "@{0} is private and you are not one of the followers."
-            self._logger.error(msg.format(name))
+            self._logger.error("No timeline posts found for @{0}.".format(name))
             return []
         if preload:
             return instance_worker(self._session, Post, posts)
@@ -266,10 +263,7 @@ class InstaScraper(LoggerMixin):
         user = self.get_profile(name)
         posts = user.fetch_tagged_posts(count, only, timestamp_limit)
         if next(posts) is False:
-            msg = "No tagged posts found for @{0}."
-            if user.is_private:
-                msg = "@{0} is private and you are not one of the followers."
-            self._logger.error(msg.format(name))
+            self._logger.error("No tagged posts found for @{0}.".format(name))
             return []
         if preload:
             return instance_worker(self._session, Post, posts)
@@ -294,10 +288,7 @@ class InstaScraper(LoggerMixin):
         user = self.get_profile(name)
         usernames = user.fetch_followers(count)
         if next(usernames) is False:
-            msg = "No followers found for @{0}."
-            if user.is_private:
-                msg = "@{0} is private and you are not one of the followers."
-            self._logger.error(msg.format(name))
+            self._logger.error("No followers found for @{0}.".format(name))
             return []
         if not convert:
             return usernames
@@ -324,10 +315,7 @@ class InstaScraper(LoggerMixin):
         user = self.get_profile(name)
         usernames = user.fetch_followings(count)
         if next(usernames) is False:
-            msg = "No following users found for @{0}."
-            if user.is_private:
-                msg = "@{0} is private and you are not one of the followers."
-            self._logger.error(msg.format(name))
+            self._logger.error("No following users found for @{0}.".format(name))
             return []
         if not convert:
             return usernames
