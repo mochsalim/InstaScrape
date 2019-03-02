@@ -8,6 +8,7 @@
   <a href="https://pypi.python.org/pypi/InstaScrape"><img src="https://img.shields.io/pypi/v/instascrape-ax.svg"></a>
   <a href="https://pypi.python.org/pypi/InstaScrape"><img src="https://img.shields.io/pypi/dm/instascrape-ax.svg"></a>
   <a href="./LICENSE.txt"><img src="https://img.shields.io/github/license/a1phat0ny/InstaScrape.svg"></a>
+  <a href="https://github.com/a1phat0ny"><img src="https://img.shields.io/badge/dev-a1phat0ny-orange.svg?style=flat-square&logo=github"></a>
 </p>
 
 **InstaScrape** is a lightweight command-line utility (and API) for downloading large amount of photos and videos ([see the list](#media-types)) from Instagram.
