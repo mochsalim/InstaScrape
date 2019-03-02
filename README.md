@@ -397,4 +397,4 @@ This project is in no way authorized, maintained or sponsored by Instagram. Use 
 We are not responsible for any kinds of negative actions that results from the use of `InstaScrape`. This is an independent and unofficial project. Use at your own risk.
 
 <br>
-<p align="center"><em>Made with ♥︎ by <a href="https://github.com/a1phat0ny">a1phat0ny</a><br>under <a href="./LICENSE.txt">MIT license</a></em></p>
+<p align="center">Made with ❤️︎ by <a href="https://github.com/a1phat0ny">a1phat0ny</a><br>under <a href="./LICENSE.txt">MIT license</a></p>
