@@ -147,10 +147,11 @@ class BaseStructure:
             param["first"] = 50 if count >= 50 or only else count
 
         if new:
-            if self.data[key].get("count") == 0:
+            data = self._query_next_page(url, param)  # scrape on page-1 (skip page-0)
+            if key in data and data[key].get("count") == 0:
                 logger.info("Total: 0 Items")
                 yield False
-            data = self._query_next_page(url, param)[key]  # scrape on page-1 (skip page-0)
+            data = data[key]
         else:
             data = self.data[key]  # extract `key` from initial data
 
