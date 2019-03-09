@@ -2,6 +2,7 @@ import json
 import logging
 import time
 import random
+import io
 
 import requests
 
@@ -189,7 +190,7 @@ class BaseStructure:
             # query next page if not enough
             if data["page_info"]["has_next_page"] and len(results) < count and len(results) < total:
                 # update url parameter
-                param["first"] = 50 if only or count - len(results) >= 50 else count - len(results)
+                param["first"] = 50  # fixed limit
                 param["after"] = data["page_info"]["end_cursor"]
                 data = self._query_next_page(url, param)[key]
             else:

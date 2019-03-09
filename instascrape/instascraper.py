@@ -2,6 +2,7 @@ import re
 import logging
 import os
 import json
+from io import IOBase
 
 import requests
 
@@ -14,7 +15,7 @@ from instascrape.utils import (dump_cookie, load_cookie, delete_cookie, instance
 
 
 class LoggerMixin:
-    """Allows `InstaScraper` to access `self._logger` without having a logger object (attribute) itself.
+    """Plug a logger and allows `InstaScraper` to access `self._logger` without having a logger object (attribute) itself.
     * Useful when pickling `InstaScraper` object, since a `thread.lock` object cannot be pickled.
     - https://stackoverflow.com/questions/3375443/how-to-pickle-loggers
     """
@@ -191,10 +192,55 @@ class InstaScraper(LoggerMixin):
         self._logger.info("Getting {0} story data...".format("#" + tag if tag else "@" + name + "'s"))
         return Story(self._session, user_id=user_id, tag=tag)
 
+    # ------------From File------------------
+
+    def _get_objects_from_file(self, obj, prefix_char: str, file: IOBase, preload: bool = False):
+        if not isinstance(file, IOBase):
+            raise ValueError("'file' argument must be an opend file")
+        try:
+            lines = file.readlines()
+            lines = [line.strip() for line in lines if line.strip()[0] == prefix_char]  # filter out invalid lines and strip them
+            if preload:
+                return instance_worker(self._session, obj, lines)
+            else:
+                return instance_generator(self._session, obj, lines)
+        finally:
+            file.close()
+
+    def get_profiles_from_file(self, file: IOBase, preload: bool = False):
+        """Retrieve `Profile` objects by reading a plain text file that contains one username each line.
+        * Line format: `@{username}`.
+        * Lines that do not start with this particular prefix character will be ignored.
+
+        Arguments:
+            file: an already opend file object to read from
+            preload: converts all items yielded from the generator to `Profile` instances and returns a list if True
+
+        Returns:
+            list: if preload=True, which contains `Profile` instances
+            generator: if preload=False, which yields `Profile` instances
+        """
+        return self._get_objects_from_file(Profile, "@", file, preload)
+
+    def get_posts_from_file(self, file: IOBase, preload: bool = False):
+        """Retrieve `Profile` objects by reading a plain text file that contains one username each line.
+        * Line format: `:{shortcode}`.
+        * Lines that do not start with this particular prefix character will be ignored.
+
+        Arguments:
+            file: an already opend file object to read from
+            preload: converts all items yielded from the generator to `Post` instances and returns a list if True
+
+        Returns:
+            list: if preload=True, which contains `Post` instances
+            generator: if preload=False, which yields `Post` instances
+        """
+        return self._get_objects_from_file(Post, ":", file, preload)
+
     # ------------Profile Based--------------
 
     def get_user_timeline_posts(self, name: str, count: int = 50, only: str = None, timestamp_limit: dict = None, preload: bool = False):
-        """Get a user's timeline posts in the form of `Post` objects.
+        """Get a user's timeline posts in the form of `Post` objects
 
         Arguments:
             name: the user's username
@@ -271,7 +317,7 @@ class InstaScraper(LoggerMixin):
             return instance_generator(self._session, Post, posts)
 
     def get_user_followers(self, name: str, count: int = 50, convert: bool = True, preload: bool = False):
-        """Get a user's followers in the form of `Profile` objects.
+        """Get a user's followers in the form of `Profile` objects or just plain usernames.
 
         Arguments:
             name: the user's username
@@ -298,7 +344,7 @@ class InstaScraper(LoggerMixin):
             return instance_generator(self._session, Profile, usernames)
 
     def get_user_followings(self, name: str, count: int = 50, convert: bool = True, preload: bool = False):
-        """Get a user's followings in the form of `Profile` objects.
+        """Get a user's followings in the form of `Profile` objects or just plain usernames.
 
         Arguments:
             name: the user's username
