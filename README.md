@@ -271,17 +271,17 @@ Top-level API methods.
 #### Get loads of Structures
 For the methods in this section (unless specified), they returns a list if `preload=True`, a generator is returned otherwise.
 
-* get_user_timeline_posts(...) -> [structures.Post]
-* get_self_saved_posts(...) -> [structures.Post]
-* get_user_tagged_posts(...) -> [structures.Post]
-* get_user_followers(...) -> [structures.Profile] if `convert=True`, [username] otherwise
-* get_user_followings(...) -> [structures.Profile] if `convert=True`, [username] otherwise
-* get_hashtag_posts(...) -> [structures.Post]
-* get_explore_posts(...) -> [structures.Post]
-* get_post_likes(...) -> [structures.Profile] if `convert=True`, [username] otherwise
-* get_post_comments(...) -> [{<username>, <text>, <time>}]
-* get_profiles_from_file(...) -> [structures.Profile]
-* get_posts_from_file(...) -> [structures.Post]
+* get_user_timeline_posts(...) -> iterator[structures.Post]
+* get_self_saved_posts(...) -> iterator[structures.Post]
+* get_user_tagged_posts(...) -> iterator[structures.Post]
+* get_user_followers(...) -> iterator[structures.Profile] if `convert=True`, iterator[username] otherwise
+* get_user_followings(...) -> iterator[structures.Profile] if `convert=True`, iterator[username] otherwise
+* get_hashtag_posts(...) -> iterator[structures.Post]
+* get_explore_posts(...) -> iterator[structures.Post]
+* get_post_likes(...) -> iterator[structures.Profile] if `convert=True`, iterator[username] otherwise
+* get_post_comments(...) -> iterator[dict{<username>, <text>, <time>}]
+* get_profiles_from_file(...) -> iterator[structures.Profile]
+* get_posts_from_file(...) -> iterator[structures.Post]
 
 #### Download Individuals
 
