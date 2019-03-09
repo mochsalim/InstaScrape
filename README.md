@@ -279,13 +279,13 @@ For the methods in this section (unless specified), they returns a list if `prel
 * get_hashtag_posts(...) -> iterator[structures.Post]
 * get_explore_posts(...) -> iterator[structures.Post]
 * get_post_likes(...) -> iterator[structures.Profile] if `convert=True`, iterator[username] otherwise
-* get_post_comments(...) -> iterator[dict{<username>, <text>, <time>}]
+* get_post_comments(...) -> iterator[dict{username, text, time}]
 * get_profiles_from_file(...) -> iterator[structures.Profile]
 * get_posts_from_file(...) -> iterator[structures.Post]
 
 #### Download Individuals
 
-All of the above methods (except `get_user_followers`, `get_user_followings`, `get_post_likes` and `get_post_comments`) each has a download method.
+All of the above methods (except `get_user_followers`, `get_user_followings`, `get_post_likes`, `get_post_comments`, `get_profiles_from_file` and `get_posts_from_file`) each has a download method.
 
 For more details, see the API docstring of each method in `instascraper.py`.
 
