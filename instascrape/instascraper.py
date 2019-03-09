@@ -199,7 +199,7 @@ class InstaScraper(LoggerMixin):
             raise ValueError("'file' argument must be an opend file")
         try:
             lines = file.readlines()
-            lines = [line.strip() for line in lines if line.strip()[0] == prefix_char]  # filter out invalid lines and strip them
+            lines = [line.strip()[1:] for line in lines if len(line) > 1 and line.strip()[0] == prefix_char]  # filter out invalid lines and strip them
             if not lines:
                 self._logger.error("No data can be retrieved from file.")
                 return []
