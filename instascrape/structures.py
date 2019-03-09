@@ -2,7 +2,6 @@ import json
 import logging
 import time
 import random
-import io
 
 import requests
 

@@ -35,9 +35,6 @@ QUERY_HASHTAG_URL = BASE_URL + "/graphql/query/?query_hash=f92f56d47dc7a55b60690
 # Query Discover Posts
 QUERY_DISCOVER_URL = BASE_URL + "/graphql/query/?query_hash=ecd67af449fb6edab7c69a205413bfa7&variables="
 
-# Query Search Results
-QUERY_SEARCH_URL = BASE_URL + "/web/search/topsearch/?context=blended&query={query}"
-
 # Query Stories
 QUERY_STORIES_URL = BASE_URL + "/graphql/query/?query_hash=eb1918431e946dd39bf8cf8fb870e426&variables="
 
