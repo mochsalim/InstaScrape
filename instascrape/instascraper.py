@@ -200,6 +200,9 @@ class InstaScraper(LoggerMixin):
         try:
             lines = file.readlines()
             lines = [line.strip() for line in lines if line.strip()[0] == prefix_char]  # filter out invalid lines and strip them
+            if not lines:
+                self._logger.error("No data can be retrieved from file.")
+                return []
             if preload:
                 return instance_worker(self._session, obj, lines)
             else:

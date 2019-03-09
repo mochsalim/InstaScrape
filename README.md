@@ -248,7 +248,7 @@ Example output of `$ instascrape dump :BtlyjD2lWvL`:
 from instascrape import InstaScraper
 
 # InstaScraper will login when entered
-with InstaScraper(username, password, user_agent=None, cookie=None, save_cookie=True, logout=True) as insta:
+with InstaScraper("username", "password", user_agent=None, cookie=None, save_cookie=True, logout=True) as insta:
     insta.do_something()
 # InstaScraper will automatically log out when closed
 ```
@@ -268,7 +268,7 @@ Top-level API methods.
 * get_post(shortcode) -> structures.Post
 * get_story(name | tag) -> structures.Story
 
-#### Get loads of Structures
+#### Get Loads of Structures
 For the methods in this section (unless specified), they returns a list if `preload=True`, a generator is returned otherwise.
 
 * get_user_timeline_posts(...) -> iterator[structures.Post]
