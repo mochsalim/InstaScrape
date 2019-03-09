@@ -269,23 +269,25 @@ Top-level API methods.
 * get_story(name | tag) -> structures.Story
 
 #### Get loads of Structures
-For the methods in this section (unless specified), they returns a list if `preload=True`, a generator otherwise.
+For the methods in this section (unless specified), they returns a list if `preload=True`, a generator is returned otherwise.
 
 * get_user_timeline_posts(...) -> [structures.Post]
 * get_self_saved_posts(...) -> [structures.Post]
 * get_user_tagged_posts(...) -> [structures.Post]
-* get_user_followers(...) -> [structures.Profile] if `convert=True`, list[str] otherwise
-* get_user_followings(...) -> [structures.Profile] if `convert=True`, list[str] otherwise
+* get_user_followers(...) -> [structures.Profile] if `convert=True`, [username] otherwise
+* get_user_followings(...) -> [structures.Profile] if `convert=True`, [username] otherwise
 * get_hashtag_posts(...) -> [structures.Post]
 * get_explore_posts(...) -> [structures.Post]
-* get_post_likes(...) -> [structures.Profile] if `convert=True`, list[str] otherwise
-* get_post_comments(...) -> list[dict{<username>, <text>, <time>}]
+* get_post_likes(...) -> [structures.Profile] if `convert=True`, [username] otherwise
+* get_post_comments(...) -> [{<username>, <text>, <time>}]
+* get_profiles_from_file(...) -> [structures.Profile]
+* get_posts_from_file(...) -> [structures.Post]
 
 #### Download Individuals
 
 All of the above methods (except `get_user_followers`, `get_user_followings`, `get_post_likes` and `get_post_comments`) each has a download method.
 
-For more details, see the docstring of each method.
+For more details, see the API docstring of each method in `instascraper.py`.
 
 ### Structure Fields
 
@@ -382,7 +384,7 @@ Just for your reference.
 ## Todos
 
 1. [x] Download posts created between two particular timestamps
-2. [ ] Read shortcodes and usernames from file
+2. [x] Read shortcodes and usernames from file
 3. [ ] Download story highlights
 4. [ ] Guest login
 
