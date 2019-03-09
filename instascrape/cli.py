@@ -53,7 +53,7 @@ def pretty_print(data, title: str = None):
         for key, value in data.items():
             print("·", key, end=": ")
 
-            if "time" in key:
+            if "time" in key.split("_"):
                 print(Fore.LIGHTCYAN_EX + str(datetime.fromtimestamp(value)))
 
             # boolean
@@ -196,8 +196,21 @@ def login(args: argparse.Namespace):
     if insta and not cookie_file:
         warn_print("You've already logged in as '{0}'".format(my_username))
         ask("Log out from current account and log in to '{0}'".format(un))
+    # Load cookie file if supplied
+    cookie_data = None
+    if cookie_file:
+        cookie_file = os.path.expanduser(os.path.abspath(cookie_file))
+        try:
+            with open(cookie_file, "r") as f:
+                cookie_data = json.load(f)
+        except FileNotFoundError:
+            err_print("Cookie file '{0}' does not exist".format(cookie_file))
+            return
+        except json.JSONDecodeError:
+            err_print("Cookie file is not a valid JSON format")
+            return
     # Initialize and login with `InstasSraper` object
-    insta = InstaScraper(username=un, password=pw, cookie=cookie_file)  # ! no need to provide `level`, as the logger was set up in `main()`.
+    insta = InstaScraper(username=un, password=pw, cookie=cookie_data)  # ! no need to provide logger `level`, as the logger was set up in `main()`.
     insta.login()  # keep the logged in state and store it in the pickle
     dump_obj(insta)
     info_print("Logged in as '{0}'".format(insta.my_username), color=Fore.LIGHTBLUE_EX)
@@ -220,9 +233,7 @@ def dump(args: argparse.Namespace):
     outfile = args.outfile
 
     if not targets:
-        parser.error("one dump type must be specified")
-    if len(targets) > 1:
-        parser.error("cannot dump more than one type")
+        parser.error("at least one dump type must be specified")
 
     insta = load_obj()
     if not insta:
@@ -233,41 +244,41 @@ def dump(args: argparse.Namespace):
     ex_kwargs = {"count": count or 50, "convert": False}
     jobs = []
 
-    target = targets[0]
-    if len(target) < 2:
-        parser.error("illegal argument parsed in '{0}'".format(target))
-    arg = target[1:]
+    for target in targets:
+        if len(target) < 2:
+            parser.error("illegal argument parsed in '{0}'".format(target))
+        arg = target[1:]
 
-    if target[0] == "@":
-        if args.likes or args.comments:
-            parser.error("-likes, -comments: not allowed with @user type")
+        if target[0] == "@":
+            if args.likes or args.comments:
+                parser.error("-likes, -comments: not allowed with @user type")
 
-        if not args.followers and not args.followings:
-            if args.count:
-                parser.error("--count: not allowed with argument @user")
-            jobs.append((insta.get_profile, (arg,), {}, target, "User Information {0}"))
+            if not args.followers and not args.followings:
+                if args.count:
+                    parser.error("--count: not allowed with argument @user")
+                jobs.append((insta.get_profile, (arg,), {}, target, "User Information {0}"))
+            else:
+                if args.followers:
+                    jobs.append((insta.get_user_followers, (arg,), ex_kwargs, target, "User Followers {0}"))
+                if args.followings:
+                    jobs.append((insta.get_user_followings, (arg,), ex_kwargs, target, "User Followings {0}"))
+
+        elif target[0] == ":":
+            if args.followers or args.followings:
+                parser.error("-followers, -followings: not allowed with :post type")
+
+            if not args.likes and not args.comments:
+                if args.count:
+                    parser.error("--count: not allowed with argument :post")
+                jobs.append((insta.get_post, (arg,), {}, target, "Post Information {0}"))
+            else:
+                if args.likes:
+                    jobs.append((insta.get_post_likes, (arg,), ex_kwargs, target, "Post Likes {0}"))
+                if args.comments:
+                    jobs.append((insta.get_post_comments, (arg,), kwargs, target, "Post Comments {0}"))
+
         else:
-            if args.followers:
-                jobs.append((insta.get_user_followers, (arg,), ex_kwargs, target, "User Followers {0}"))
-            if args.followings:
-                jobs.append((insta.get_user_followings, (arg,), ex_kwargs, target, "User Followings {0}"))
-
-    elif target[0] == ":":
-        if args.followers or args.followings:
-            parser.error("-followers, -followings: not allowed with :post type")
-
-        if not args.likes and not args.comments:
-            if args.count:
-                parser.error("--count: not allowed with argument :post")
-            jobs.append((insta.get_post, (arg,), {}, target, "Post Information {0}"))
-        else:
-            if args.likes:
-                jobs.append((insta.get_post_likes, (arg,), ex_kwargs, target, "Post Likes {0}"))
-            if args.comments:
-                jobs.append((insta.get_post_comments, (arg,), kwargs, target, "Post Comments {0}"))
-
-    else:
-        parser.error("illegal symbol parsed in argument: '{0}'".format(target))
+            parser.error("illegal symbol parsed in argument: '{0}'".format(target))
 
     print(Fore.YELLOW + "Current User:", Style.BRIGHT + insta.my_username)
     if count:
