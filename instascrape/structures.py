@@ -229,7 +229,7 @@ class Profile(BaseStructure):
         - fetch_followings()
     """
 
-    info_vars = ("url", "user_id", "username", "fullname", "biography", "website", "followers_count", "followings_count",
+    info_vars = ("url", "user_id", "username", "fullname", "biography", "website", "followers_count", "followings_count", "mutual_followers_count",
                  "is_verified", "is_private", "profile_pic", "story_highlights_count", "timeline_posts_count")
 
     def __init__(self, session: requests.Session, name: str = ""):
@@ -286,6 +286,11 @@ class Profile(BaseStructure):
     def followings_count(self) -> int:
         """Amount of followees this user has."""
         return self.data["edge_follow"]["count"]
+
+    @property
+    def mutual_followers_count(self):
+        """Amount of followers this user has who are also following you."""
+        return self.data["edge_mutual_followed_by"]["count"]
 
     @property
     def is_verified(self) -> bool:
