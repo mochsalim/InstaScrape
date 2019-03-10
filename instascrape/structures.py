@@ -9,7 +9,7 @@ from instascrape.constants import *
 from instascrape.exceptions import *
 from instascrape.container import container
 
-__all__ = ("BaseStructure", "Profile", "Hashtag", "Explore", "Post", "Story")
+__all__ = ("BaseStructure", "Profile", "Hashtag", "Explore", "Post", "Story", "Highlight")
 logger = logging.getLogger("instascrape")
 
 
@@ -232,13 +232,13 @@ class Profile(BaseStructure):
     info_vars = ("url", "user_id", "username", "fullname", "biography", "website", "followers_count", "followings_count", "mutual_followers_count",
                  "is_verified", "is_private", "profile_pic", "story_highlights_count", "timeline_posts_count")
 
-    def __init__(self, session: requests.Session, name: str = ""):
+    def __init__(self, session: requests.Session, name: str):
         BaseStructure.__init__(self, session)
         self.name = name
         self._get_user_data()
 
     def __repr__(self):
-        return "<Profile username={0} user_id={1}>".format(self.username, self.user_id)
+        return "<Profile username='{0}' user_id={1}>".format(self.username, self.user_id)
 
     def _get_user_data(self):
         logger.debug("Getting initial data of Profile(name={0})...".format(self.name))
@@ -288,7 +288,7 @@ class Profile(BaseStructure):
         return self.data["edge_follow"]["count"]
 
     @property
-    def mutual_followers_count(self):
+    def mutual_followers_count(self) -> int:
         """Amount of followers this user has who are also following you."""
         return self.data["edge_mutual_followed_by"]["count"]
 
@@ -316,6 +316,14 @@ class Profile(BaseStructure):
     def timeline_posts_count(self) -> int:
         """Amount of timeline posts this user has."""
         return self.data["edge_owner_to_timeline_media"]["count"]
+
+    # @property
+    # def saved_posts_count(self) -> int:
+    #     pass
+    # TODO
+    # @property
+    # def tagged_posts_count(self) -> int:
+    #     pass
 
     def fetch_timeline_posts(self, count: int = 50, only: str = None, timestamp_limit: dict = None):
         """Fetches a user's timeline posts. Call the low-level method `self.fetch_posts`.
@@ -369,6 +377,30 @@ class Profile(BaseStructure):
         param = {"id": self.user_id}
         return self._scrape_pages(lambda node: node["username"], QUERY_FOLLOWINGS_URL, param, "edge_follow", count, new=True)
 
+    def fetch_highlights(self) -> list:
+        """Fetches this user's all story highlights in titles & highlight reel ids.
+
+        Returns:
+            list: [(title, id)]
+        """
+        param = {"user_id": self.user_id, "include_chaining": False, "include_reel": False,
+                 "include_suggested_users": False, "include_logged_out_extras": False, "include_highlight_reels": True}
+        data = self._get_json(QUERY_HIGHLIGHTS_URL + json.dumps(param))
+        if "data" not in data or "user" not in data["data"]:
+            message = data.get("message", "key error")
+            logger.debug(json.dumps(data))
+            if message == "rate limited":
+                raise RateLimitedError()
+            raise ExtractError(message)
+
+        data = data["data"]["user"]["edge_highlight_reels"]["edges"]
+        results = []
+        for item in data:
+            title = item["node"]["title"]
+            id = item["node"]["id"]
+            results.append((title, id))
+        return results
+
 
 class Hashtag(BaseStructure):
     """Provide a method to fetch posts of the given hashtag.
@@ -377,12 +409,14 @@ class Hashtag(BaseStructure):
         - fetch_posts()
     """
 
+    info_vars = ()
+
     def __init__(self, session: requests.Session, tag: str):
         BaseStructure.__init__(self, session)
         self.tag = tag
 
     def __repr__(self):
-        return "<Hashtag tag={0}>".format(self.tag)
+        return "<Hashtag tag='{0}'>".format(self.tag)
 
     def fetch_posts(self, count: int = 50, only: str = None, timestamp_limit: dict = None):
         """Fetches posts that tagged the given hashtag name.
@@ -402,6 +436,8 @@ class Explore(BaseStructure):
     Methods:
         - fetch_posts()
     """
+
+    info_vars = ()
 
     def __init__(self, session: requests.Session):
         BaseStructure.__init__(self, session)
@@ -577,25 +613,26 @@ class Story(BaseStructure):
 
     info_vars = ()
 
-    def __init__(self, session: requests.Session, user_id: str = None, tag: str = None):
+    def __init__(self, session: requests.Session, user_id: str = None, tag: str = None, reel_id: str = None):
         BaseStructure.__init__(self, session)
-        if all((user_id, tag)) or not any((user_id, tag)):
-            raise ValueError("Invalid arguments: either 'user_id' or 'tag' should be specified.")
+        if all((user_id, tag, reel_id)) or not any((user_id, tag, reel_id)) or (bool(user_id), bool(tag), bool(reel_id)).count(True) == 2:
+            raise ValueError("Invalid arguments: only one of 'user_id', 'tag', 'reel_id' should be specified.")
         self.owner_user_id = user_id
         self.tag = tag
+        self.reel_id = reel_id
         self._get_story_data()
 
     def __repr__(self):
-        return "<Story name={0}>".format(self.name)
+        return "<Story owner_name='{0}'>".format(self.owner_name)
 
     def __len__(self):
         return len(self.obtain_media())
 
     def _get_story_data(self):
-        logger.debug("Getting initial data of Story({0})...".format("user_id=" + self.owner_user_id if self.owner_user_id else "tag=" + self.tag))
+        logger.debug("Getting initial data of Story({0})...".format(("user_id=" + self.owner_user_id if self.owner_user_id else "tag=" + self.tag) if self.owner_user_id or self.tag else ("reel_id=" + self.reel_id)))
         param = {"reel_ids": [self.owner_user_id] if self.owner_user_id else [],
-                 "tag_names": [self.tag] if self.tag else [], "location_ids": [], "highlight_reel_ids": [],
-                 "precomposed_overlay": False}
+                 "tag_names": [self.tag] if self.tag else [], "location_ids": [],
+                 "highlight_reel_ids": [self.reel_id] if self.reel_id else [], "precomposed_overlay": False}
         data = self._get_json(QUERY_STORIES_URL + json.dumps(param))
 
         if "data" not in data or "reels_media" not in data["data"]:
@@ -607,7 +644,7 @@ class Story(BaseStructure):
 
         data = data["data"]["reels_media"]
         if not data:
-            raise StoryNotFound(self.owner_user_id or self.tag)
+            raise StoryNotFound(self.owner_user_id or self.tag or self.reel_id)
         self.data = data[0]
 
     @property
@@ -616,14 +653,14 @@ class Story(BaseStructure):
         return self.data["__typename"]
 
     @property
-    def name(self) -> str:
+    def owner_name(self) -> str:
         """Name (username or hashtag name) of the story."""
         return self.data["owner"].get("username") or self.data["owner"]["name"]
 
     @property
     def id(self) -> str:
         """ID (user or hashtag) of the story."""
-        return self.data["owner"].get("id") or self.data["id"]
+        return self.data["id"]
 
     @property
     def created_time_list(self) -> list:
@@ -637,3 +674,25 @@ class Story(BaseStructure):
             a list of Container objects: (see: container.py)
         """
         return container(self.typename, self.data)
+
+
+class Highlight(Story):
+
+    info_vars = ()
+
+    def __init__(self, session: requests.Session, title: str, reel_id: str):
+        Story.__init__(self, session, reel_id=reel_id)
+        self._title = title
+
+    def __repr__(self):
+        return "<Highlight title='{0}' reel_id={1}>".format(self.title, self.reel_id)
+
+    @property
+    def title(self) -> str:
+        """Title of this story highlight."""
+        return self._title
+
+    @property
+    def created_time_list(self) -> list:
+        """`Highlight` does not implement this property."""
+        return []

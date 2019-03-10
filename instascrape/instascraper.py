@@ -10,7 +10,7 @@ from instascrape.constants import *
 from instascrape.structures import *
 from instascrape.exceptions import *
 from instascrape.logger import set_logger
-from instascrape.download import (_down_posts, _down_containers, _down_from_src)
+from instascrape.download import (_down_highlights, _down_posts, _down_containers, _down_from_src)
 from instascrape.utils import (dump_cookie, load_cookie, delete_cookie, instance_worker, instance_generator)
 
 
@@ -181,16 +181,18 @@ class InstaScraper(LoggerMixin):
         self._logger.info("Getting :{0} post data...".format(shortcode))
         return Post(self._session, shortcode=shortcode)
 
-    def get_story(self, name: str = None, tag: str = None) -> Story:
-        """Get a user's Story object by user id via User object or by hashtag name.
-        * Either name or tag argument should be given.
-        """
-        assert (name or tag) and not all((name, tag)), "Empty arguments"
-        user_id = None
-        if name:
-            user_id = self.get_profile(name).user_id
-        self._logger.info("Getting {0} story data...".format("#" + tag if tag else "@" + name + "'s"))
-        return Story(self._session, user_id=user_id, tag=tag)
+    def get_user_story(self, name: str) -> Story:
+        """Get a user's Story object by username via Profile object."""
+        assert name, "Empty arguments"
+        user_id = self.get_profile(name).user_id
+        self._logger.info("Getting @{0}'s story data...".format(name))
+        return Story(self._session, user_id=user_id)
+
+    def get_hashtag_story(self, tag: str):
+        """Get a hashtag's Story object by hashtag name."""
+        assert tag, "Empty arguments"
+        self._logger.info("Getting #{0} story data...".format(tag))
+        return Story(self._session, tag=tag)
 
     # ------------From File------------------
 
@@ -241,6 +243,19 @@ class InstaScraper(LoggerMixin):
         return self._get_objects_from_file(Post, ":", file, preload)
 
     # ------------Profile Based--------------
+
+    def get_user_highlights(self, name: str, preload: bool = False):
+        assert name, "Empty arguments"
+        self._logger.info("Fetching @{0}'s story highlights...".format(name))
+        user = self.get_profile(name)
+        highlights = user.fetch_highlights()
+        if not highlights:
+            self._logger.error("No story highlights found for @{0}.".format(name))
+            return []
+        if preload:
+            return instance_worker(self._session, Highlight, highlights)
+        else:
+            return instance_generator(self._session, Highlight, highlights)
 
     def get_user_timeline_posts(self, name: str, count: int = 50, only: str = None, timestamp_limit: dict = None, preload: bool = False):
         """Get a user's timeline posts in the form of `Post` objects
@@ -492,14 +507,6 @@ class InstaScraper(LoggerMixin):
             self._logger.info("Destination: {0}".format(path))
         return path
 
-    def download_story(self, name: str = None, tag: str = None, dest: str = None) -> str:
-        story = self.get_story(name=name, tag=tag)
-        self._logger.info("Downloading stories of {0} with {1} media...".format(name or "#" + tag, len(story)))
-        path = _down_containers(story, dest, directory=("@" if name else "#") + story.name + "(story)")
-        if path:
-            self._logger.info("Destination: {0}".format(path))
-        return path
-
     def download_user_profile_pic(self, name: str, dest: str = None) -> str:
         user = self.get_profile(name)
         self._logger.info("Downloading {0}'s profile picture...".format(name))
@@ -508,7 +515,39 @@ class InstaScraper(LoggerMixin):
             self._logger.info("Destination: {0}".format(path))
         return path
 
+    def download_user_story(self, name: str, dest: str = None) -> str:
+        story = self.get_user_story(name)
+        self._logger.info("Downloading @{0}'s with {1} media...".format(name, len(story)))
+        path = _down_containers(story, dest, directory="@" + story.owner_name + "(story)")
+        if path:
+            self._logger.info("Destination: {0}".format(path))
+        return path
+
+    def download_hashtag_story(self, tag: str, dest: str = None) -> str:
+        story = self.get_hashtag_story(tag)
+        self._logger.info("Downloading story of #{0} with {1} media...".format(tag, len(story)))
+        path = _down_containers(story, dest, directory="#" + story.owner_name + "(story)")
+        if path:
+            self._logger.info("Destination: {0}".format(path))
+        return path
+
     # -------------Profile Based--------------
+
+    def download_user_highlights(self, name: str, dest: str = None, preload: bool = False) -> str or None:
+        """Download a user's timeline posts.
+
+        Arguments:
+            name: the user's username
+            dest: path to the destination of the download files
+            preload: convert all items in the iterable to `Post` instances before downloading if True
+
+        Returns:
+            path: full path to the download destination, or None if download failed
+        """
+        highlights = self.get_user_highlights(name, preload)
+        if not highlights:
+            return None
+        return _down_highlights(highlights, dest, directory="@" + name + "(highlights)")
 
     def download_user_timeline_posts(self, name: str, count: int = 50, only: str = None, dest: str = None, timestamp_limit: dict = None,
                                      preload: bool = False, dump_metadata: bool = False) -> str or None:

@@ -85,7 +85,7 @@ def container(typename: str, data: dict) -> list:
         return [Container(data)]
 
     results = []
-    if typename in ("GraphReel", "GraphMASReel"):
+    if typename in ("GraphReel", "GraphMASReel", "GraphHighlightReel"):
         data = data["items"]
     if typename == "GraphSidecar":
         data = data["edge_sidecar_to_children"]["edges"]

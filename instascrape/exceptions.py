@@ -9,7 +9,7 @@ class ExtractError(InstaScrapeError):
         self.message = message
 
     def __str__(self):
-        return "Failed to extract data from response. ({0})".format(self.message)
+        return "Failed to extract data from response. (message: {0})".format(self.message)
 
 
 class RateLimitedError(InstaScrapeError):
@@ -68,7 +68,7 @@ class PostNotFound(NotFoundError):
 
 
 class StoryNotFound(NotFoundError):
-    """Raised when failed to find story for the user / hashtag"""
+    """Raised when failed to find story for the user / hashtag."""
 
     def __init__(self, arg):
         self.arg = arg

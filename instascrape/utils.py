@@ -1,5 +1,7 @@
 import os
+import sys
 import pickle
+import traceback
 import logging
 from threading import Thread
 from datetime import datetime
@@ -145,6 +147,8 @@ def protection(*args):
     try:
         yield
     except Exception as e:
+        exc = sys.exc_info()
+        logger.debug("".join(traceback.format_exception(*exc)))
         logger.error("{0} ({1}): {2}".format(args[0], args[1], e))
     finally:
         pass
@@ -164,14 +168,18 @@ def instance_worker(session: requests.Session, instance, generator) -> list:
         if i:
             items.append(i)
     # job
-    def job(item: str):
-        with protection(instance.__name__, item):
-            results.append(instance(session, item))
+    def job(arg):
+        if type(arg) is tuple:
+            with protection(instance.__name__, arg[0]):
+                results.append(instance(session, *arg))
+        else:
+            with protection(instance.__name__, arg):
+                results.append(instance(session, arg))
     # spawn threads
     logger.info("[2] Spawning workers...")
     threads = []
-    for item in items:
-        thread = Thread(target=job, args=(item,))
+    for arg in items:
+        thread = Thread(target=job, args=arg)
         threads.append(thread)
         thread.start()
     for thread in threads:
@@ -182,6 +190,10 @@ def instance_worker(session: requests.Session, instance, generator) -> list:
 
 def instance_generator(session: requests.Session, instance, generator):
     """Yields an instance produced from each item in a generator. (with protection)"""
-    for index, item in enumerate(generator):
-        with protection(instance.__name__, item):
-            yield instance(session, item)
+    for index, arg in enumerate(generator):
+        if type(arg) is tuple:
+            with protection(instance.__name__, arg[0]):
+                yield instance(session, *arg)
+        else:
+            with protection(instance.__name__, arg):
+                yield instance(session, arg)

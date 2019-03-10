@@ -37,6 +37,8 @@ QUERY_DISCOVER_URL = BASE_URL + "/graphql/query/?query_hash=ecd67af449fb6edab7c6
 
 # Query Stories
 QUERY_STORIES_URL = BASE_URL + "/graphql/query/?query_hash=eb1918431e946dd39bf8cf8fb870e426&variables="
+# Query Highlights
+QUERY_HIGHLIGHTS_URL = BASE_URL + "/graphql/query/?query_hash=7c16654f22c819fb63d1183034a5162f&variables="
 
 # User-Agent
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36"

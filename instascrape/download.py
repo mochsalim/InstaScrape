@@ -207,3 +207,23 @@ def _down_posts(posts, dest: str = None, directory: str = None, dump_metadata: b
     if path:  # path is None if error occurred in `_down_containers()`
         logger.info("Destination: {0}".format(path))
     return path
+
+
+def _down_highlights(highlights, dest: str = None, directory: str = None):
+    is_preloaded = isinstance(highlights, list)
+    path = None
+    total = len(highlights) if is_preloaded else None
+    logger.info("Downloading {0} highlights {1}...".format(total or "(?)", "with " + str(sum([len(x) for x in highlights])) + " media in total" if is_preloaded else ""))
+    # prepare progress bar, hide progress bar when quiet and show download details when debugging
+    with progress(total=total, desc="Processing", ascii=False) as bar:
+        for i, highlight in enumerate(highlights, start=1):
+            bar.set_postfix_str("(" + (highlight.title if len(highlight.title) <= 17 else highlight.title[:14] + "...") + ") " + highlight.typename)
+            logger.debug("Downloading {0} of {1} highlights...".format(i, total or "(?)"))
+            # download
+            subdir = highlight.title.replace(" ", "-")
+            # NOTE: force_subdir if dump_metadata ?
+            path = _down_containers(highlight, dest, directory, subdir, force_subdir=True)  # `subdir` can also be the filename if the post has only one media
+            bar.update(1)
+    if path:  # path is None if error occurred in `_down_containers()`
+        logger.info("Destination: {0}".format(path))
+    return path

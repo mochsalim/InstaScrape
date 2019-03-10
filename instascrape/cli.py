@@ -359,7 +359,7 @@ def down(args: argparse.Namespace):
 
     for target in targets:
         if len(target) < 2:
-            parser.error("illegal argument parsed in '{0}'".format(target))
+            parser.error("illegal argument parsed in argument: '{0}'".format(target))
 
         if target[0] == "@":  # user
             if target[1] == "#":  # tagged
@@ -372,13 +372,17 @@ def down(args: argparse.Namespace):
 
         elif target[0] == "%":  # story
             if target[1] == "@":  # user
-                story_args = (target[2:], None)
+                f = insta.download_user_story
             elif target[1] == "#":  # hashtag
-                story_args = (None, target[2:])
+                f = insta.download_hashtag_story
             else:
                 parser.error("illegal symbol parsed in argument: '{0}'".format(target))
             has_individual = True
-            jobs.append((insta.download_story, story_args, ex_kwargs, target))
+            jobs.append((f, (target[2:],), ex_kwargs, target))
+
+        elif target[0] == "+":  # highlights
+            has_individual = True
+            jobs.append((insta.download_user_highlights, (target[1:],), ex_kwargs, target))
 
         elif target[0] == ":":  # post
             has_individual = True
@@ -398,7 +402,8 @@ def down(args: argparse.Namespace):
             temp = [
                 (insta.download_user_timeline_posts, (target,), profile_kwargs),
                 (insta.download_user_tagged_posts, (target,), profile_kwargs),
-                (insta.download_story, (target, None), profile_ex_kwargs),
+                (insta.download_user_story, (target,), profile_ex_kwargs),
+                (insta.download_user_highlights, (target,), profile_ex_kwargs),
                 (insta.download_user_profile_pic, (target,), profile_ex_kwargs)
             ]
             profile_jobs.append((target, temp))
@@ -414,15 +419,16 @@ def down(args: argparse.Namespace):
     # Handle profiles download
     if profile_jobs and jobs:
         # arguments conflict -> cannot download both profiles and other types at the same time
-        parser.error("cannot specify download both 'profile' type and other types of media at the same time")
+        parser.error("cannot specify downloading both 'profile' type and other types of media at the same time")
 
     # ========== Download jobs ==========
 
     print(Fore.YELLOW + "Current User:", Style.BRIGHT + insta.my_username)
     if not has_individual:
         print(Fore.YELLOW + "Count:", Style.BRIGHT + str(count or 50))
-    if has_individual and any((count, only, preload, dump_metadata)):
-        warn_print("--count, --only, --preload --dump-metadata: not allowed with argument profile_pic (/), post (:), story (%@) (%#)")
+    if has_individual and any((count, only, preload, dump_metadata, before_date, after_date)):
+        err_print("--count, --only, --preload, --dump-metadata, --before-date, --after-date: not allowed with argument profile_pic (/), post (:), story (%@) (%#), highlights (+)")
+        return
 
     # Handle profile jobs
     if profile_jobs:
@@ -477,7 +483,7 @@ def main(argv=None):
     l_group.add_argument("-u", "--username", type=str, metavar="<username>",
                          help="skip interactive login process, try loging in to this user")
     l_group.add_argument("-c", "--cookie", type=str, metavar="<path/to/file>", dest="cookie",
-                         help="provide path to the cookie file")  # FIXME: implement
+                         help="provide path to the cookie file")
 
     logout_parser = subparsers.add_parser("logout", help="Logout from current account")
     logout_parser.set_defaults(func=logout)
@@ -522,6 +528,8 @@ def main(argv=None):
                              help="Download media of a post by shortcode (:)")
     media_types.add_argument("story", type=str, metavar="%@username/%#hashtag", nargs="*",
                              help="Download stories media of a user by username or by hashtag name (%%@) (%%#)")
+    media_types.add_argument("highlights", type=str, metavar="+username", nargs="*",
+                             help="Download story highlights media of a user by username (+)")
     media_types.add_argument("hashtag", type=str, metavar="#hashtag", nargs="*",
                              help="Download posts media by hashtag name (#)")
     media_types.add_argument("-explore", action="store_true",
