@@ -35,7 +35,6 @@
   - [Structure Fields](#structure-fields)
   - [Container Fields](#container-fields)
 - [Typenames](#typenames)
-- [Todos](#todos)
 - [Contributing](#contributing)
 - [Disclaimer](#disclaimer)
 
@@ -215,6 +214,7 @@ Example output of `$ instascrape dump :BtlyjD2lWvL`:
 * `%`: download story of
   * `%@username` : a user
   * `%#hashtag` : a hashtag
+* `+username` : download story highlights of the user
 * `#hashtag` : download posts of the hashtag
 * `-explore` : download posts of explore feed
 * `-saved` : download self saved posts
@@ -253,7 +253,7 @@ with InstaScraper("username", "password", user_agent=None, cookie=None, save_coo
 # InstaScraper will automatically log out when closed
 ```
 
-***NOTE:** You should always access `InstaScraper` with its context manager to ensure better security and prevent breaking.* 
+***NOTE:** You should always access `InstaScraper` with its context manager to ensure better security and prevent breaking the code.* 
 
 ### InstaScraper Methods
 
@@ -266,11 +266,13 @@ Top-level API methods.
 #### Get Independent Structure
 * get_profile(name) -> structures.Profile
 * get_post(shortcode) -> structures.Post
-* get_story(name | tag) -> structures.Story
+* get_user_story(name) -> structures.Story
+* get_hashtag_story(tag) -> structures.Story
 
 #### Get Loads of Structures
 For the methods in this section (unless specified), they returns a list if `preload=True`, a generator is returned otherwise.
 
+* get_user_highlights(...) -> iterator[structures.Highlight]
 * get_user_timeline_posts(...) -> iterator[structures.Post]
 * get_self_saved_posts(...) -> iterator[structures.Post]
 * get_user_tagged_posts(...) -> iterator[structures.Post]
@@ -305,6 +307,7 @@ The following properties are lower level.
 * website -> *str* or *None*
 * followers_count -> *int*
 * followings_count -> *int*
+* mutual_followers_count -> *int*
 * is_verified -> *bool*
 * is_private -> *bool*
 * profile_pic -> *str*
@@ -337,13 +340,23 @@ The following properties are lower level.
 1. obtain_media() -> *list[container.Container]*
 
 * typename -> *str*
-* name -> *str*
+* owner_name -> *str*
 * id -> *str*
 * created_time_list -> *list[float]*
 
+#### Highlight (Story)
+
+0. len()
+1. obtain_media() -> *list[container.Container]*
+
+* typename -> *str*
+* owner_name -> *str*
+* id -> *str*
+* title -> *str*
+
 ### Container Fields
 
-This object is used to storing media source data for downloading. You do not need to deal with this object normally.
+This class is used to storing media source data for downloading. You do not need to deal with this object normally.
 
 * typename -> *str*
 * thumbnail -> *str*
@@ -380,13 +393,6 @@ Just for your reference.
 * GraphMASReel (hashtag story)
   * GraphStoryImage
   * GraphStoryVideo
-
-## Todos
-
-1. [x] Download posts created between two particular timestamps
-2. [x] Read shortcodes and usernames from file
-3. [ ] Download story highlights
-4. [ ] Guest login
 
 ## Contributing
 
