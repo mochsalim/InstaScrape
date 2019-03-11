@@ -220,7 +220,7 @@ def _down_highlights(highlights, dest: str = None, directory: str = None):
             bar.set_postfix_str("(" + (highlight.title if len(highlight.title) <= 17 else highlight.title[:14] + "...") + ") " + highlight.typename)
             logger.debug("Downloading {0} of {1} highlights...".format(i, total or "(?)"))
             # download
-            subdir = highlight.title.replace(" ", "-")
+            subdir = highlight.title.replace(" ", "-").replace("/", "-")
             # NOTE: force_subdir if dump_metadata ?
             path = _down_containers(highlight, dest, directory, subdir, force_subdir=True)  # `subdir` can also be the filename if the post has only one media
             bar.update(1)

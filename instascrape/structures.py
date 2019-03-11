@@ -677,6 +677,11 @@ class Story(BaseStructure):
 
 
 class Highlight(Story):
+    """Interface of a story Highlight. Providing information of a story Highlight and a method to get the media.
+
+    Methods:
+        * obtain_media()
+    """
 
     info_vars = ()
 
