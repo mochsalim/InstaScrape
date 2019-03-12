@@ -375,14 +375,12 @@ def down(args: argparse.Namespace):
                 f = insta.download_user_story
             elif target[1] == "#":  # hashtag
                 f = insta.download_hashtag_story
+            elif target[1] == "-":  # highlights
+                f = insta.download_user_highlights
             else:
                 parser.error("illegal symbol parsed in argument: '{0}'".format(target))
             has_individual = True
             jobs.append((f, (target[2:],), ex_kwargs, target))
-
-        elif target[0] == "+":  # highlights
-            has_individual = True
-            jobs.append((insta.download_user_highlights, (target[1:],), ex_kwargs, target))
 
         elif target[0] == ":":  # post
             has_individual = True
