@@ -179,7 +179,7 @@ def instance_worker(session: requests.Session, instance, generator) -> list:
     logger.info("[2] Spawning workers...")
     threads = []
     for arg in items:
-        thread = Thread(target=job, args=arg)
+        thread = Thread(target=job, args=(arg,))
         threads.append(thread)
         thread.start()
     for thread in threads:
