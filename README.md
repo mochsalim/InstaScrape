@@ -59,6 +59,7 @@
 * Job queue to handle multiple download tasks 🏃🏻‍
 * Good exceptions handling ⚠️
 * Download posts created in a particular time period 🕓
+* Detect and Skip existing files automatically to avoid re-downloading
 * Simple to use API
 
 ## What You Can Download
