@@ -13,10 +13,11 @@ if not os.path.isdir(DIR_PATH):
 if not os.path.isdir(ACCOUNT_DIR):
     os.mkdir(ACCOUNT_DIR)
 
+# Import API
 from instascrape.instascraper import InstaScraper
-from instascrape.download import _down_containers
 from instascrape.structures import *
 from instascrape.exceptions import *
 
+# Init colors
 from colorama import init
 init(autoreset=True)

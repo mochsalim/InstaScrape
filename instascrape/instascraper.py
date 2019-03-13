@@ -10,7 +10,7 @@ from instascrape.constants import *
 from instascrape.structures import *
 from instascrape.exceptions import *
 from instascrape.logger import set_logger
-from instascrape.download import (_down_highlights, _down_posts, _down_containers, _down_from_src)
+from instascrape.download import (_down_igtv, _down_highlights, _down_posts, _down_structure, _down_from_src)
 from instascrape.utils import (dump_cookie, load_cookie, delete_cookie, instance_worker, instance_generator)
 
 
@@ -245,6 +245,16 @@ class InstaScraper(LoggerMixin):
     # ------------Profile Based--------------
 
     def get_user_highlights(self, name: str, preload: bool = False):
+        """Get a user's story highlights.
+
+        Arguments:
+            name: the user's username
+            preload: convert all items in the iterable to `Highlight` instances before downloading if True
+
+        Returns:
+             list: if preload=True, which contains `Highlight` instances
+            generator: if preload=False, which yields `Highlight` instances
+        """
         assert name, "Empty arguments"
         self._logger.info("Fetching @{0}'s story highlights...".format(name))
         user = self.get_profile(name)
@@ -256,6 +266,29 @@ class InstaScraper(LoggerMixin):
             return instance_worker(self._session, Highlight, highlights)
         else:
             return instance_generator(self._session, Highlight, highlights)
+
+    def get_user_igtv(self, name: str, preload: bool = False):
+        """Get a user's IGTV videos.
+
+        Arguments:
+            name: the user's username
+            preload: convert all items in the iterable to `IGTV` instances before downloading if True
+
+        Returns:
+             list: if preload=True, which contains `IGTV` instances
+            generator: if preload=False, which yields `IGTV` instances
+        """
+        assert name, "Empty arguments"
+        self._logger.info("Fetching @{0}'s IGTV...".format(name))
+        user = self.get_profile(name)
+        igtv = user.fetch_igtv()
+        if not igtv:
+            self._logger.error("No IGTV videos found for @{0}.".format(name))
+            return []
+        if preload:
+            return instance_worker(self._session, IGTV, igtv)
+        else:
+            return instance_generator(self._session, IGTV, igtv)
 
     def get_user_timeline_posts(self, name: str, count: int = 50, only: str = None, timestamp_limit: dict = None, preload: bool = False):
         """Get a user's timeline posts in the form of `Post` objects
@@ -496,7 +529,7 @@ class InstaScraper(LoggerMixin):
         p = self.get_post(shortcode)
         self._logger.info("Downloading {0} with {1} media...".format(shortcode, len(p)))
         # subdir = to_datetime(p.created_time) + "_" + p.shortcode
-        path = _down_containers(p, dest, subdir=p.shortcode, force_subdir=dump_metadata)
+        path = _down_structure(p, dest, subdir=p.shortcode, force_subdir=dump_metadata)
         if dump_metadata:
             filename = p.shortcode + ".json"
             metadata_file = os.path.join(path, p.shortcode, filename)
@@ -518,7 +551,7 @@ class InstaScraper(LoggerMixin):
     def download_user_story(self, name: str, dest: str = None) -> str:
         story = self.get_user_story(name)
         self._logger.info("Downloading @{0}'s with {1} media...".format(name, len(story)))
-        path = _down_containers(story, dest, directory="@" + story.owner_name + "(story)")
+        path = _down_structure(story, dest, directory="@" + story.owner_name + "(story)")
         if path:
             self._logger.info("Destination: {0}".format(path))
         return path
@@ -526,20 +559,37 @@ class InstaScraper(LoggerMixin):
     def download_hashtag_story(self, tag: str, dest: str = None) -> str:
         story = self.get_hashtag_story(tag)
         self._logger.info("Downloading story of #{0} with {1} media...".format(tag, len(story)))
-        path = _down_containers(story, dest, directory="#" + story.owner_name + "(story)")
+        path = _down_structure(story, dest, directory="#" + story.owner_name + "(story)")
         if path:
             self._logger.info("Destination: {0}".format(path))
         return path
 
     # -------------Profile Based--------------
 
-    def download_user_highlights(self, name: str, dest: str = None, preload: bool = False) -> str or None:
-        """Download a user's timeline posts.
+    def download_user_igtv(self, name: str, dest: str = None, preload: bool = False, dump_metadata: bool = False) -> str or None:
+        """Download a user's IGTV videos.
 
         Arguments:
             name: the user's username
             dest: path to the destination of the download files
-            preload: convert all items in the iterable to `Post` instances before downloading if True
+            preload: convert all items in the iterable to `IGTV` instances before downloading if True
+            dump_metadata: force create a sub directory of the post and dump metadata of IGTV post to a file inside if True
+
+        Returns:
+            path: full path to the download destination, or None if download failed
+        """
+        igtv = self.get_user_igtv(name, preload)
+        if not igtv:
+            return None
+        return _down_igtv(igtv, dest, directory="@" + name + "(igtv)", dump_metadata=dump_metadata)
+
+    def download_user_highlights(self, name: str, dest: str = None, preload: bool = False) -> str or None:
+        """Download a user's story highlights.
+
+        Arguments:
+            name: the user's username
+            dest: path to the destination of the download files
+            preload: convert all items in the iterable to `Highlight` instances before downloading if True
 
         Returns:
             path: full path to the download destination, or None if download failed

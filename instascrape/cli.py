@@ -352,8 +352,11 @@ def down(args: argparse.Namespace):
     kwargs = {"count": count or 50, "only": only, "dest": dest, "preload": preload, "dump_metadata": dump_metadata,
               "timestamp_limit": timestamp_limit or None}
     ex_kwargs = {"dest": dest}  # -> kwargs for individuals
+    highlight_kwargs = {"dest": dest, "preload": preload}
+    igtv_kwargs = {"dest": dest, "preload": preload, "dump_metadata": dump_metadata}
 
     has_individual = False  # -> has one of 'story', 'post', 'profile-pic'
+    has_inherited = False  # -> has one of 'highlights', 'igtv'
     profile_jobs = []  # -> profile job queue -> tuple(target text, list[tuple(function, (args), kwargs, target text),...])
     jobs = []  # job queue -> tuple(function, (args), kwargs, target text)
 
@@ -372,15 +375,24 @@ def down(args: argparse.Namespace):
 
         elif target[0] == "%":  # story
             if target[1] == "@":  # user
+                has_individual = True
                 f = insta.download_user_story
+                k = ex_kwargs
             elif target[1] == "#":  # hashtag
+                has_individual = True
                 f = insta.download_hashtag_story
+                k = ex_kwargs
             elif target[1] == "-":  # highlights
+                has_inherited = True
                 f = insta.download_user_highlights
+                k = highlight_kwargs
             else:
                 parser.error("illegal symbol parsed in argument: '{0}'".format(target))
-            has_individual = True
-            jobs.append((f, (target[2:],), ex_kwargs, target))
+            jobs.append((f, (target[2:],), k, target))
+
+        elif target[0] == "+":  # igtv
+            has_inherited = True
+            jobs.append((insta.download_user_igtv, (target[1:],), igtv_kwargs, target))
 
         elif target[0] == ":":  # post
             has_individual = True
@@ -422,10 +434,13 @@ def down(args: argparse.Namespace):
     # ========== Download jobs ==========
 
     print(Fore.YELLOW + "Current User:", Style.BRIGHT + insta.my_username)
-    if not has_individual:
+    if not has_individual and not has_inherited:
         print(Fore.YELLOW + "Count:", Style.BRIGHT + str(count or 50))
     if has_individual and any((count, only, preload, dump_metadata, before_date, after_date)):
-        err_print("--count, --only, --preload, --dump-metadata, --before-date, --after-date: not allowed with argument profile_pic (/), post (:), story (%@) (%#), highlights (+)")
+        err_print("--count, --only, --preload, --dump-metadata, --before-date, --after-date: not allowed with argument profile_pic (/), post (:), story (%@) (%#)")
+        return
+    if has_inherited and any((count, only, before_date, after_date)):
+        err_print("--count, --only, --before-date, --after-date: not allowed with argument highlights (%-), igtv (+)")
         return
 
     # Handle profile jobs
@@ -526,8 +541,10 @@ def main(argv=None):
                              help="Download media of a post by shortcode (:)")
     media_types.add_argument("story", type=str, metavar="%@username/%#hashtag", nargs="*",
                              help="Download stories media of a user by username or by hashtag name (%%@) (%%#)")
-    media_types.add_argument("highlights", type=str, metavar="+username", nargs="*",
-                             help="Download story highlights media of a user by username (+)")
+    media_types.add_argument("highlights", type=str, metavar="%-username", nargs="*",
+                             help="Download story highlights media of a user by username (%%-)")
+    media_types.add_argument("igtv", type=str, metavar="+username", nargs="*",
+                             help="Download IGTV videos of a user by username (+)")
     media_types.add_argument("hashtag", type=str, metavar="#hashtag", nargs="*",
                              help="Download posts media by hashtag name (#)")
     media_types.add_argument("-explore", action="store_true",

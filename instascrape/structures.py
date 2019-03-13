@@ -9,7 +9,7 @@ from instascrape.constants import *
 from instascrape.exceptions import *
 from instascrape.container import container
 
-__all__ = ("BaseStructure", "Profile", "Hashtag", "Explore", "Post", "Story", "Highlight")
+__all__ = ("BaseStructure", "Profile", "Hashtag", "Explore", "Post", "IGTV", "Story", "Highlight")
 logger = logging.getLogger("instascrape")
 
 
@@ -317,14 +317,6 @@ class Profile(BaseStructure):
         """Amount of timeline posts this user has."""
         return self.data["edge_owner_to_timeline_media"]["count"]
 
-    # @property
-    # def saved_posts_count(self) -> int:
-    #     pass
-    # TODO
-    # @property
-    # def tagged_posts_count(self) -> int:
-    #     pass
-
     def fetch_timeline_posts(self, count: int = 50, only: str = None, timestamp_limit: dict = None):
         """Fetches a user's timeline posts. Call the low-level method `self.fetch_posts`.
 
@@ -399,6 +391,18 @@ class Profile(BaseStructure):
             title = item["node"]["title"]
             id = item["node"]["id"]
             results.append((title, id))
+        return results
+
+    def fetch_igtv(self) -> list:
+        data = self.data["edge_felix_video_timeline"]
+        results = []
+        count = data["count"]
+        if not count:
+            return results
+        logger.debug("Total: {0} Items".format(count))
+        for item in data["edges"]:
+            node = item["node"]
+            results.append((node["title"], node["shortcode"]))
         return results
 
 
@@ -604,6 +608,33 @@ class Post(BaseStructure):
                                   QUERY_COMMENTS_URl, param, "edge_media_to_comment", count, new=True)
 
 
+class IGTV(Post):
+    """Interface of a IGTV post. Providing information of a IGTV post and a method to get the media.
+
+    Methods:
+        * as_dict()
+        * obtain_media()
+        - fetch_comments()
+        - fetch_likes()
+    """
+
+    info_vars = ("typename", "url", "shortcode", "post_id", "location_name", "location_id", "owner_username",
+                 "owner_user_id", "created_time", "caption", "media_count", "likes_count", "comments_count", "title")
+
+    def __init__(self, session: requests.Session, title: str, shortcode: str):
+        # actually, the IGTV url is 'instagram.com/tv/{shortcode}', but it's ok to use 'instagram.com/p/{shortcode}' since it is considered as a Post
+        Post.__init__(self, session, shortcode=shortcode)
+        self._title = title
+
+    def __repr__(self):
+        return "<IGTV title='{0}' shortcode={1}>".format(self.title, self.shortcode)
+
+    @property
+    def title(self) -> str:
+        """Title of this IGTV video."""
+        return self._title
+
+
 class Story(BaseStructure):
     """Interface of a Story. Providing information of a Story and a method to get the media.
 
@@ -611,7 +642,7 @@ class Story(BaseStructure):
         * obtain_media()
     """
 
-    info_vars = ()
+    info_vars = ("typename", "owner_name", "id", "created_time_list")
 
     def __init__(self, session: requests.Session, user_id: str = None, tag: str = None, reel_id: str = None):
         BaseStructure.__init__(self, session)
@@ -683,7 +714,7 @@ class Highlight(Story):
         * obtain_media()
     """
 
-    info_vars = ()
+    info_vars = ("typename", "owner_name", "id", "created_time_list", "title")
 
     def __init__(self, session: requests.Session, title: str, reel_id: str):
         Story.__init__(self, session, reel_id=reel_id)
@@ -696,8 +727,3 @@ class Highlight(Story):
     def title(self) -> str:
         """Title of this story highlight."""
         return self._title
-
-    @property
-    def created_time_list(self) -> list:
-        """`Highlight` does not implement this property."""
-        return []
