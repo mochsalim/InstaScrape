@@ -25,8 +25,8 @@ InstaScrape is a lightweight command-line utility for downloading large amount o
 
 ## Features
 
-* Fancy interface with colors ✨
-* Fast as lightning,️ with multithreading scrape support ⚡
+* Fancy output with colors ✨
+* Fast as lightning,️ with multithreaded scraping support ⚡
 * Efficient, use generators (yield) 💪🏻
 * Yield data to prevent getting rate limited by Instagram
 * Manage cookies and multiple accounts easily 🍪
@@ -34,6 +34,7 @@ InstaScrape is a lightweight command-line utility for downloading large amount o
 * Job queue to handle multiple download tasks 🏃🏻‍
 * Good exceptions handling ⚠️
 * Download posts created in a particular time period 🕓
+* Simple to use API
 """
 
 # Setup
