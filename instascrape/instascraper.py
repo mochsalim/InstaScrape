@@ -188,7 +188,7 @@ class InstaScraper(LoggerMixin):
         self._logger.info("Getting @{0}'s story data...".format(name))
         return Story(self._session, user_id=user_id)
 
-    def get_hashtag_story(self, tag: str):
+    def get_hashtag_story(self, tag: str) -> Story:
         """Get a hashtag's Story object by hashtag name."""
         assert tag, "Empty arguments"
         self._logger.info("Getting #{0} story data...".format(tag))
