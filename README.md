@@ -11,7 +11,7 @@
   <a href="https://github.com/a1phat0ny"><img src="https://img.shields.io/badge/dev-a1phat0ny-orange.svg?style=flat-square&logo=github"></a>
 </p>
 
-**InstaScrape** is a lightweight command-line utility (and API) for downloading large amount of photos and videos ([see the list](#media-types)) from Instagram.
+**InstaScrape** is a lightweight command-line utility (and API) for downloading photos and videos ([see the list](#what-you-can-download)) from Instagram.
 
 ## Table of Contents
 - [Features](#features)
@@ -31,17 +31,27 @@
     - [Media Types](#media-types)
     - [Options](#options)
 - [API](#api)
-  - [InstaScraper Methods](#instascraper-methods)
-  - [Structure Fields](#structure-fields)
-  - [Container Fields](#container-fields)
+  - [Methods of InstaScraper](#methods-of-instascraper)
+    - [Account Interactions](#account-interactions)
+    - [Get Independent Structure](#get-independent-structure)
+    - [Get Loads of Structures](#get-loads-of-structures)
+    - [Download Structures](#download-structures)
+  - [Properties of Structures](#properties-of-structures)
+    - [Profile](#profilesession-requestssession-name-str)
+    - [Post](#postsession-requestssession-shortcode-str)
+    - [IGTV](#igtvsession-requestssession-title-str-shortcode-str)
+    - [Story](#storysession-requestssession-user_id-str--tag-str--reel_id-str)
+    - [Highlight](#highlightsession-requestssession-title-str-reel_id-str)
+  - [Fields of Container](#fields-of-container)
+- [Terminology](#terminology)
 - [Typenames](#typenames)
 - [Contributing](#contributing)
 - [Disclaimer](#disclaimer)
 
 ## Features
 
-* Fancy interface with colors ✨
-* Fast as lightning,️ with multithreading scrape support ⚡
+* Fancy output with colors ✨
+* Fast as lightning,️ with multithreaded scraping support ⚡
 * Efficient, use generators (yield) 💪🏻
 * Yield data to prevent getting rate limited by Instagram
 * Manage cookies and multiple accounts easily 🍪
@@ -49,6 +59,21 @@
 * Job queue to handle multiple download tasks 🏃🏻‍
 * Good exceptions handling ⚠️
 * Download posts created in a particular time period 🕓
+* Simple to use API
+
+## What You Can Download
+
+* Timeline media of User
+* Tagged media of User
+* Profile-picture of User
+* Media of Post
+* Story of User
+* Story of Hashtag
+* Story highlights of User
+* IGTV videos of User
+* Media of Posts in Hashtag
+* Media of Posts in Explore
+* Saved media of User
 
 ## Why
 
@@ -60,7 +85,7 @@ Have you ever came across someone on Instagram that you would really like to mak
 
 > Hell yeah ! 😍
 
-Then, **InstaScrape** really helps you solve the problem !
+Then, **InstaScrape** really helps you solve the problems !
 
 ## Installation
 
@@ -124,8 +149,9 @@ This means you will not need to log in again the next time you use `$ instascrap
 
 The saved auth cookie can be reused for up to 90 days. When the cookie is expired, you need to choose '(3) + Login New Account'. The expired cookie will be overwritten by the new valid cookie since then.
 
-Example output, if `-u/--username` and `-c/--cookie` are not specified:
 ```
+▶ instascrape login
+
     Choose Account
 
 (1)   user1
@@ -143,7 +169,7 @@ choice>
 ```
 * `*` asterisk annotated the current logged in user
 
-In this situation, `user3` is logged in. The `InstaScraper` object is saved and being used by `user3`, but the cookie file is already gone.
+In this situation, `user3` is logged in. The `InstaScraper` object is saved and being used by `user3`, but the cookie file has already gone (deleted).
 That means once `user3` logged out, he will need to provide his credentials again to get a new cookie in order to log into Instagram.
 
 ***NOTE**: All cookies are stored in the `~/.instascrape/accounts/` directory.*
@@ -166,10 +192,10 @@ That means once `user3` logged out, he will need to provide his credentials agai
 #### Dump Types and Flags
 
 * **User `@username`** : user information in JSON format
-  * followers `-followers` : followers of the user in plain text, one username per line in the pattern of `@username`
-  * followings `-followings` : followings of the user in plain text, one username per line in the pattern of `@username`
+  * followers `-followers` : followers of the user in plain text, one username per line in the pattern of `@{username}`
+  * followings `-followings` : followings of the user in plain text, one username per line in the pattern of `@{username}`
 * **Post `:shortcode`** post information in JSON format
-  * likes `-likes` : users who liked the post in plain text, one username per line in the pattern of `@username` 
+  * likes `-likes` : users who liked the post in plain text, one username per line in the pattern of `@{username}` 
   * comments `-comments` : comments of the post in JSON format
 
 #### Flag Option
@@ -180,8 +206,14 @@ That means once `user3` logged out, he will need to provide his credentials agai
 
 * `-o/--outfile <path/to/file>` : dump data to file in a proper format
 
-Example output of `$ instascrape dump :BtlyjD2lWvL`:
 ```
+▶ instascrape dump :BtlyjD2lWvL
+
+Current User: XXXXX
+
+* (Dump) Get Post :BtlyjD2lWvL
+- Getting :BtlyjD2lWvL post data...
+
   [Post Information :BtlyjD2lWvL]
 · typename: GraphImage
 · url: https://instagram.com/p/BtlyjD2lWvL
@@ -196,6 +228,48 @@ Example output of `$ instascrape dump :BtlyjD2lWvL`:
 · media_count: 1
 · likes_count: 287535
 · comments_count: 1339
+```
+
+```
+▶ instascrape dump @9gag -followings
+
+Current User: XXXXX
+
+* (Dump) Get User Followings @9gag
+- Fetching @9gag's followings...
+- Getting @9gag's profile data...
+- Total: 28 Items
+- WARNING: Only 28 items can be fetched.
+
+  [User Followings @9gag]
+[1] funoff
+[2] watchx
+[3] 9gagshop
+[4] voyaged
+[5] 9gaggirly
+[6] 9gagnomnom
+[7] classicalaf
+[8] 9gaggroove
+[9] takemymoney
+[10] meowed
+[11] 6wordsmith
+[12] horrorphiles
+[13] thinkinanime
+[14] familygoals
+[15] fitbeast
+[16] 9gagscience
+[17] bestads
+[18] getfamous
+[19] nevertooweird
+[20] askingforafrd
+[21] couple
+[22] barked
+[23] hipdict
+[24] 8fact
+[25] 9gagceo
+[26] nsfwclothing
+[27] 9gagmobile
+[28] doodles
 ```
 
 ---
@@ -214,7 +288,8 @@ Example output of `$ instascrape dump :BtlyjD2lWvL`:
 * `%`: download story of
   * `%@username` : a user
   * `%#hashtag` : a hashtag
-* `+username` : download story highlights of the user
+* `%-username` : download story highlights of the user
+* `+username` : download IGTV videos of the user
 * `#hashtag` : download posts of the hashtag
 * `-explore` : download posts of explore feed
 * `-saved` : download self saved posts
@@ -228,13 +303,14 @@ Example output of `$ instascrape dump :BtlyjD2lWvL`:
 * `--dest <path/to/directory>` : set path to the download destination
 
 * `--preload` : collect the initial data of all items (using thread workers) before downloading them, might help increase the speed.
-*WARN: use at your own risk, this option is unstable and should only be used when downloading small amount of posts, otherwise you may get rate limited*.
 
-* `--before-date <datetime>` : download posts created before this datetime, can be used with `after-date` (`{YY-mm-dd-h:m:s}`)
+* `--before-date <datetime>` : download posts created before this datetime, can be combined with `after-date` (`{YY-mm-dd-h:m:s}`)
 
-* `--after-date <datetime>` : download posts created after this datetime, can be used with `before-date` (`{YY-mm-dd-h:m:s}`)
+* `--after-date <datetime>` : download posts created after this datetime, can be combined with `before-date` (`{YY-mm-dd-h:m:s}`)
 
 * `--dump-metadata` : download posts along with their metadata dumped in JSON files
+
+***WARN:** `--preload` option is unstable and should only be used when downloading small amount of posts, otherwise you may get rate limited quickly*.
 
 ***NOTE:** Posts downloaded will be named in the pattern `{YY-mm-dd-h:m:s}_{shortcode}` e.g. `2019-02-06-15:57:39_BtiGPG_AhXA`.*
 
@@ -245,19 +321,23 @@ Example output of `$ instascrape dump :BtlyjD2lWvL`:
 **InstaScrape** also provides an easy to use API with context manager implemented.
 
 ```python
+InstaScraper(username: str = None, password: str = None, user_agent: str = None, cookie: dict = None, save_cookie: bool = True, logout: bool = True, level: int = None)
+```
+
+```python
 from instascrape import InstaScraper
 
-# InstaScraper will login when entered
+# InstaScraper will log in when entering
 with InstaScraper("username", "password", user_agent=None, cookie=None, save_cookie=True, logout=True) as insta:
     insta.do_something()
-# InstaScraper will automatically log out when closed
+# InstaScraper will automatically log out when closing
 ```
 
 ***NOTE:** You should always access `InstaScraper` with its context manager to ensure better security and prevent breaking the code.* 
 
-### InstaScraper Methods
+### Methods of `InstaScraper`
 
-Top-level API methods.
+High-level API methods.
 
 #### Account Interactions
 * login()
@@ -285,17 +365,19 @@ For the methods in this section (unless specified), they returns a list if `prel
 * get_profiles_from_file(...) -> iterator[structures.Profile]
 * get_posts_from_file(...) -> iterator[structures.Post]
 
-#### Download Individuals
+#### Download Structures
 
 All of the above methods (except `get_user_followers`, `get_user_followings`, `get_post_likes`, `get_post_comments`, `get_profiles_from_file` and `get_posts_from_file`) each has a download method.
 
 For more details, see the API docstring of each method in `instascraper.py`.
 
-### Structure Fields
+### Properties of Structures
 
-The following properties are lower level.
+You should only access the following specified fields and methods of the structures.
 
-#### Profile
+Calling other methods of the structures is deprecated as they are lower-level methods.
+
+#### `Profile(session: requests.Session, name: str)`
 
 1. as_dict() -> *dict*
 
@@ -314,7 +396,7 @@ The following properties are lower level.
 * story_highlights_count -> *int*
 * timeline_posts_count -> *int*
 
-#### Post
+#### `Post(session: requests.Session, shortcode: str)`
 
 0. len()
 1. obtain_media() -> *list[container.Container]*
@@ -334,7 +416,28 @@ The following properties are lower level.
 * likes_count -> *int*
 * comments_count -> *int*
 
-#### Story
+#### `IGTV(session: requests.Session, title: str, shortcode: str)`
+
+0. len()
+1. obtain_media() -> *list[container.Container]*
+2. as_dict() -> *dict*
+
+* typename -> *str*
+* url -> *str*
+* shortcode -> *str*
+* post_id -> *str*
+* location_name -> *str* or *None*
+* location_id -> *str* or *None*
+* owner_username -> *str*
+* owner_user_id -> *str*
+* created_time -> *float*
+* caption -> *str*
+* media_count -> *int*
+* likes_count -> *int*
+* comments_count -> *int*
+* title -> *str*
+
+#### `Story(session: requests.Session, user_id: str | tag: str | reel_id: str)`
 
 0. len()
 1. obtain_media() -> *list[container.Container]*
@@ -344,7 +447,7 @@ The following properties are lower level.
 * id -> *str*
 * created_time_list -> *list[float]*
 
-#### Highlight (Story)
+#### `Highlight(session: requests.Session, title: str, reel_id: str)`
 
 0. len()
 1. obtain_media() -> *list[container.Container]*
@@ -352,44 +455,36 @@ The following properties are lower level.
 * typename -> *str*
 * owner_name -> *str*
 * id -> *str*
+* created_time_list -> *list[float]*
 * title -> *str*
 
-### Container Fields
+### Fields of `Container`
 
-This class is used to storing media source data for downloading. You do not need to deal with this object normally.
+This class is used to storing media source data for downloading. You do not need to deal with this object in normal situation.
 
 * typename -> *str*
 * thumbnail -> *str*
 * size -> *dict*
 * video_duration -> *float* or *None*
 * resources -> *str*
+* src -> *str*
 
 ## Terminology
 
-[1] URL of a post from @9gag : `https://www.instagram.com/p/BtiGPG_AhXA/`
+URL of a post from @9gag : `https://www.instagram.com/p/BtiGPG_AhXA/`
 
 => *BtiGPG_AhXA* is the shortcode of this post.
 
-[2] In the world of `InstaScrape`, `@` and `:` are symbols to classify a User and a Post respectively.
-
 ## Typenames
 
-Just for your reference.
-
-### User
 * GraphUser
 
-### Hashtag
-* GraphHashtag
-
-### Post
 * GraphSidecar (combination of videos or/and images)
   * GraphImage
   * GraphVideo
 
-### Story
-* GraphReel (user story)
-* GraphHighlightReel (user's story highlights)
+* GraphReel (user's story)
+* GraphHighlightReel (user's story highlight)
 * GraphMASReel (hashtag story)
   * GraphStoryImage
   * GraphStoryVideo
