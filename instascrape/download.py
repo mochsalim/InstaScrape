@@ -225,7 +225,7 @@ def _down_highlights(highlights, dest: str = None, directory: str = None):
             logger.debug("Downloading {0} of {1} highlights...".format(i, total or "(?)"))
             # download
             subdir = highlight.title
-            subdir = re.sub(r"\W+", "-", subdir)  # clean
+            subdir = subdir.replace("/", "-")  # clean
             # NOTE: force_subdir if dump_metadata ?
             path = _down_structure(highlight, dest, directory, subdir, force_subdir=True)  # `subdir` can also be the filename if the post has only one media
             bar.update(1)
@@ -246,7 +246,7 @@ def _down_igtv(igtv, dest: str = None, directory: str = None, dump_metadata: boo
             logger.debug("Downloading {0} of {1} IGTV videos...".format(i, total or "(?)"))
             # download
             subdir = video.title
-            subdir = re.sub(r"\W+", "-", subdir)  # clean
+            subdir = subdir.replace("/", "-")  # clean
             # NOTE: force_subdir if dump_metadata ?
             path = _down_structure(video, dest, directory, subdir, force_subdir=False, mono=True)  # `subdir` can also be the filename if the post has only one media
             # dump metadata
