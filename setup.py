@@ -36,6 +36,7 @@ InstaScrape is a lightweight command-line utility for downloading large amount o
 * Download posts created in a particular time period 🕓
 * Detect and Skip existing files automatically to avoid re-downloading
 * Simple to use API
+* Simple to use CLI (use symbols)
 """
 
 # Setup

@@ -61,6 +61,7 @@
 * Download posts created in a particular time period 🕓
 * Detect and Skip existing files automatically to avoid re-downloading
 * Simple to use API
+* Simple to use CLI (use symbols)
 
 ## What You Can Download
 
