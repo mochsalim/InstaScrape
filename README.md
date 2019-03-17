@@ -5,8 +5,8 @@
 <p align="center"><img src="./demo.gif?raw=true" width=70%></p>
 
 <p align="center">
-  <a href="https://pypi.python.org/pypi/InstaScrape"><img src="https://img.shields.io/pypi/v/instascrape-ax.svg"></a>
-  <a href="https://pypi.python.org/pypi/InstaScrape"><img src="https://img.shields.io/pypi/dm/instascrape-ax.svg"></a>
+  <a href="https://pypi.python.org/pypi/instascrape-ax"><img src="https://img.shields.io/pypi/v/instascrape-ax.svg"></a>
+  <a href="https://pypi.python.org/pypi/instascrape-ax"><img src="https://img.shields.io/pypi/dm/instascrape-ax.svg"></a>
   <a href="./LICENSE.txt"><img src="https://img.shields.io/github/license/a1phat0ny/InstaScrape.svg"></a>
   <a href="https://github.com/a1phat0ny"><img src="https://img.shields.io/badge/dev-a1phat0ny-orange.svg?style=flat-square&logo=github"></a>
 </p>
