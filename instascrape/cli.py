@@ -407,13 +407,16 @@ def down(args: argparse.Namespace):
             profile_path = os.path.join(dest or "./", target)
             profile_kwargs = kwargs.copy()
             profile_ex_kwargs = ex_kwargs.copy()
-            profile_kwargs.update({"dest": profile_path})
-            profile_ex_kwargs.update({"dest": profile_path})
+            profile_highlight_kwargs = highlight_kwargs.copy()
+            profile_igtv_kwargs = igtv_kwargs.copy()
+            for aa in (profile_kwargs, profile_ex_kwargs, profile_highlight_kwargs, profile_igtv_kwargs):
+                aa.update({"dest": profile_path})
             temp = [
                 (insta.download_user_timeline_posts, (target,), profile_kwargs),
                 (insta.download_user_tagged_posts, (target,), profile_kwargs),
+                (insta.download_user_igtv, (target,), profile_igtv_kwargs),
                 (insta.download_user_story, (target,), profile_ex_kwargs),
-                (insta.download_user_highlights, (target,), profile_ex_kwargs),
+                (insta.download_user_highlights, (target,), profile_highlight_kwargs),
                 (insta.download_user_profile_pic, (target,), profile_ex_kwargs)
             ]
             profile_jobs.append((target, temp))
@@ -441,6 +444,9 @@ def down(args: argparse.Namespace):
         return
     if has_inherited and any((count, only, before_date, after_date)):
         err_print("--count, --only, --before-date, --after-date: not allowed with argument highlights (%-), igtv (+)")
+        return
+    if insta.download_user_highlights in [job[0] for job in jobs] and dump_metadata:
+        err_print("--count, --only, --dump-metadata, --before-date, --after-date: not allowed with argument highlights (%-)")
         return
 
     # Handle profile jobs
