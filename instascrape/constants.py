@@ -19,7 +19,7 @@ QUERY_FOLLOWERS_URL = BASE_URL + "/graphql/query/?query_hash=56066f031e6239f35a9
 QUERY_FOLLOWINGS_URL = BASE_URL + "/graphql/query/?query_hash=c56ee0ae1f89cdbd1c89e2bc6b8f3d18&variables="
 
 # Query Post Comments
-QUERY_COMMENTS_URl = BASE_URL + "/graphql/query/?query_hash=f0986789a5c5d17c2400faebf16efd0d&variables="
+QUERY_COMMENTS_URL = BASE_URL + "/graphql/query/?query_hash=f0986789a5c5d17c2400faebf16efd0d&variables="
 # Query Post Likes
 QUERY_LIKES_URL = BASE_URL + "/graphql/query/?query_hash=e0f59e4a1c8d78d0161873bc2ee7ec44&variables="
 

@@ -572,7 +572,7 @@ class Post(BaseStructure):
     @property
     def comments_count(self) -> int:
         """Amount of comments of the post."""
-        return self.data["edge_media_to_comment"]["count"]
+        return self.data["edge_media_to_parent_comment"]["count"]
 
     def obtain_media(self) -> list:
         """Obtain media of the post in the form of `Container` objects.
@@ -605,7 +605,7 @@ class Post(BaseStructure):
         """
         param = {"shortcode": self.shortcode}
         return self._scrape_pages(lambda x: {"username": x["owner"]["username"], "text": x["text"], "time": x["created_at"]},
-                                  QUERY_COMMENTS_URl, param, "edge_media_to_comment", count, new=True)
+                                  QUERY_COMMENTS_URL, param, "edge_media_to_comment", count, new=True)
 
 
 class IGTV(Post):
