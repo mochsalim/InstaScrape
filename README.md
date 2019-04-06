@@ -11,7 +11,7 @@
   <a href="https://github.com/a1phat0ny"><img src="https://img.shields.io/badge/dev-a1phat0ny-orange.svg?style=flat-square&logo=github"></a>
 </p>
 
-**InstaScrape** is a lightweight command-line utility (and API) for downloading photos and videos ([see the list](#what-you-can-download)) from Instagram.
+**InstaScrape** is a lightweight command-line utility (and API) for downloading photos and videos ([see the list](#what-you-can-download)) from Instagram in bulk.
 
 ## Table of Contents
 - [Features](#features)
@@ -59,6 +59,7 @@
 * Job queue to handle multiple download tasks 🏃🏻‍
 * Good exceptions handling ⚠️
 * Download posts created in a particular time period 🕓
+* Download large amount of media at once
 * Detect and Skip existing files automatically to avoid re-downloading
 * Simple to use API
 * Simple to use CLI (use symbols)

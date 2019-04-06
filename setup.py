@@ -21,7 +21,7 @@ with open(os.path.join(here, "instascrape", "__version__.py"), "r") as f:
 
 long_description = \
 """
-InstaScrape is a lightweight command-line utility for downloading large amount of photos and videos from Instagram.
+InstaScrape is a lightweight command-line utility for downloading large amount of photos and videos from Instagram in bulk.
 
 ## Features
 
@@ -34,6 +34,7 @@ InstaScrape is a lightweight command-line utility for downloading large amount o
 * Job queue to handle multiple download tasks 🏃🏻‍
 * Good exceptions handling ⚠️
 * Download posts created in a particular time period 🕓
+* Download large amount of media at once
 * Detect and Skip existing files automatically to avoid re-downloading
 * Simple to use API
 * Simple to use CLI (use symbols)
