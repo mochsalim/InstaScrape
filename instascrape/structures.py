@@ -155,14 +155,19 @@ class BaseStructure:
         else:
             data = self.data[key]  # extract `key` from initial data
 
-        total = data.get("count")
-        if total:
-            logger.info("Total: {0} Items".format(total))
+        if key != "edge_user_to_photos_of_you":
+            total = data.get("count")
+            if total:
+                logger.info("Total: {0} Items".format(total))
+            else:
+                total = 100000  # if unlimited count of posts found, set max limit to 100 thousands
+            logger.debug("Count: {0} Items".format(count))
+            if total < count:
+                logger.warning("Only {0} items can be fetched.".format(total))
         else:
-            total = 100000  # if unlimited count of posts found, set max limit to 100 thousands
-        logger.debug("Count: {0} Items".format(count))
-        if total < count:
-            logger.warning("Only {0} items can be fetched.".format(total))
+            # the 'count' is less than the actual amount of tagged posts the user has, idk why :( instagram's problem ?
+            logger.debug("Scraping 'edge_user_to_photos_of_you' (tagged), ignored total count of posts provided the response")
+            total = 99999
 
         yield (False) if not data["edges"] else (count if total > count else total)
 
