@@ -358,7 +358,7 @@ class Profile(BaseStructure):
             count: the maximum count of followers you want to fetch
         """
         param = {"id": self.user_id}
-        return self._scrape_pages(lambda node: node["username"], QUERY_FOLLOWERS_URL, param, "edge_followed_by", count, new=True)
+        return self._scrape_pages(lambda node: {"username": node["username"], "user_id": node["id"]}, QUERY_FOLLOWERS_URL, param, "edge_followed_by", count, new=True)
 
     def fetch_followings(self, count: int = 50):
         """Fetches this user's followings in usernames.
@@ -367,7 +367,7 @@ class Profile(BaseStructure):
             count: the maximum count of followings you want to fetch
         """
         param = {"id": self.user_id}
-        return self._scrape_pages(lambda node: node["username"], QUERY_FOLLOWINGS_URL, param, "edge_follow", count, new=True)
+        return self._scrape_pages(lambda node: {"username": node["username"], "user_id": node["id"]}, QUERY_FOLLOWINGS_URL, param, "edge_follow", count, new=True)
 
     def fetch_highlights(self) -> list:
         """Fetches this user's all story highlights in titles & highlight reel ids.
@@ -592,7 +592,7 @@ class Post(BaseStructure):
             list: usernames of users who liked this post
         """
         param = {"shortcode": self.shortcode, "include_reel": False}
-        return self._scrape_pages(lambda x: x["username"], QUERY_LIKES_URL, param, "edge_liked_by", count, new=True)
+        return self._scrape_pages(lambda node: {"username": node["username"], "user_id": node["id"]}, QUERY_LIKES_URL, param, "edge_liked_by", count, new=True)
 
     def fetch_comments(self, count: int = 50):
         """Fetch comments of this post in the form of {username: <username>, text: <comment text>, time: <timestamp>}.
@@ -604,7 +604,7 @@ class Post(BaseStructure):
             list: dictionaries of comments
         """
         param = {"shortcode": self.shortcode}
-        return self._scrape_pages(lambda x: {"username": x["owner"]["username"], "text": x["text"], "time": x["created_at"]},
+        return self._scrape_pages(lambda node: {"username": node["owner"]["username"], "user_id": node["owner"]["id"], "text": node["text"], "time": node["created_at"]},
                                   QUERY_COMMENTS_URL, param, "edge_media_to_comment", count, new=True)
 
 
