@@ -3,7 +3,6 @@ import os
 import sys
 import json
 import time
-import re
 from contextlib import contextmanager
 
 import requests
@@ -102,7 +101,7 @@ def _down_from_src(src: str, filename: str, path: str = None, mono: bool = False
     return path
 
 
-def _down_structure(structure, dest: str = None, directory: str = None, subdir: str = None, force_subdir: bool = False, mono: bool = False) -> str:
+def _down_structure(structure, dest: str = None, directory: str = None, subdir: str = None, force_subdir: bool = False, mono: bool = False) -> (str, tuple):
     """Download media of containers of a single structure to `dest`. May deecorate the proccess with progress bar.
     - If there is multiple media in the structure, a sub directory will be created to store the media.
     * This function calls `down_from_src` function and wraps it with some interactions with Post object to support downloading post.
@@ -126,6 +125,7 @@ def _down_structure(structure, dest: str = None, directory: str = None, subdir: 
 
     Returns:
         str: full path to the download destination
+        tuple: (success, fails, exists)
     """
     dest = dest or "./"
     path = os.path.abspath(dest)
@@ -149,6 +149,7 @@ def _down_structure(structure, dest: str = None, directory: str = None, subdir: 
 
     logger.debug("Downloading {0} ({1} media) [{2}]...".format(subdir or directory, len(containers), structure.typename))
     logger.debug("Path: " + path)
+    success = fails = exists = 0
     with progress(len(containers), disable=mono) as bar:
         for i, c in enumerate(containers, start=1):
             bar.set_postfix_str(c.typename)
@@ -163,19 +164,24 @@ def _down_structure(structure, dest: str = None, directory: str = None, subdir: 
 
             # check if the file / directory already exists
             if os.path.isfile(os.path.join(path, filename + ".jpg")) or os.path.isfile(os.path.join(path, filename + ".mp4")):
+                exists += 1
                 logger.debug("file already downloaded, skipped !")
                 bar.set_description_str(Back.BLUE + Fore.BLACK + "[" + "Exists".center(11) + "]" + Style.RESET_ALL)
                 time.sleep(0.1)  # give some time for displaying the 'Exists' badge of the progress bar
             else:
                 # download
-                _down_from_src(c.src, filename, path, mono=mono)
+                state = _down_from_src(c.src, filename, path, mono=mono)
+                if state:
+                    success += 1
+                else:
+                    fails += 1
             bar.update(1)
-    return return_path
+    return return_path, (success, fails, exists)
 
 
 def _down_posts(posts, dest: str = None, directory: str = None, dump_metadata: bool = False):
     """High-level function for downloading media of a list of posts. Decorates the process with tqdm progress bar.
-    * This function calls `down_containers` function and wraps it with 'for' loop & progress bar to support downloading multiple posts.
+    * This function calls `down_structure` function and wraps it with 'for' loop & progress bar to support downloading multiple posts.
 
     Arguments:
         posts: a generator which generates `Post` instances or a list that contains preloaded `Post` instances
@@ -191,6 +197,7 @@ def _down_posts(posts, dest: str = None, directory: str = None, dump_metadata: b
     path = None
     total = len(posts) if is_preloaded else None
     logger.info("Downloading {0} posts {1}...".format(total or "(?)", "with " + str(sum([len(x) for x in posts])) + " media in total" if is_preloaded else ""))
+    success = fails = exists = 0
     # prepare progress bar, hide progress bar when quiet and show download details when debugging
     with progress(total=total, desc="Processing", ascii=False) as bar:
         for i, p in enumerate(posts, start=1):
@@ -199,7 +206,7 @@ def _down_posts(posts, dest: str = None, directory: str = None, dump_metadata: b
             # download
             subdir = to_datetime(p.created_time) + "_" + p.shortcode
             # NOTE: force_subdir if dump_metadata ?
-            path = _down_structure(p, dest, directory, subdir, force_subdir=False)  # `subdir` can also be the filename if the post has only one media
+            path, (s, f, e) = _down_structure(p, dest, directory, subdir, force_subdir=False)  # `subdir` can also be the filename if the post has only one media
             # dump metadata
             if dump_metadata:
                 filename = subdir + ".json"
@@ -207,7 +214,12 @@ def _down_posts(posts, dest: str = None, directory: str = None, dump_metadata: b
                 logger.debug("-> [{0}] dump metadata".format(filename))
                 with open(metadata_file, "w+") as f:
                     json.dump(p.as_dict(), f, indent=4)
+            # calcualte total
+            success += s
+            fails += f
+            exists += e
             bar.update(1)
+    logger.info("{0} total = {1} success + {2} fails + {3} exists".format(success + fails + exists, success, fails, exists) + " "*10)
     if path:  # path is None if error occurred in `_down_structure()`
         logger.info("Destination: {0}".format(path))
     return path
@@ -218,6 +230,7 @@ def _down_highlights(highlights, dest: str = None, directory: str = None):
     path = None
     total = len(highlights) if is_preloaded else None
     logger.info("Downloading {0} highlights {1}...".format(total or "(?)", "with " + str(sum([len(x) for x in highlights])) + " media in total" if is_preloaded else ""))
+    success = fails = exists = 0
     # prepare progress bar, hide progress bar when quiet and show download details when debugging
     with progress(total=total, desc="Processing", ascii=False) as bar:
         for i, highlight in enumerate(highlights, start=1):
@@ -227,8 +240,13 @@ def _down_highlights(highlights, dest: str = None, directory: str = None):
             subdir = highlight.title
             subdir = subdir.replace("/", "-")  # clean
             # NOTE: force_subdir if dump_metadata ?
-            path = _down_structure(highlight, dest, directory, subdir, force_subdir=True)  # `subdir` can also be the filename if the post has only one media
+            path, (s, f, e) = _down_structure(highlight, dest, directory, subdir, force_subdir=True)  # `subdir` can also be the filename if the post has only one media
+            # calcualte total
+            success += s
+            fails += f
+            exists += e
             bar.update(1)
+    logger.info("{0} total = {1} success + {2} fails + {3} exists".format(success + fails + exists, success, fails, exists) + " "*10)
     if path:  # path is None if error occurred in `_down_structure()`
         logger.info("Destination: {0}".format(path))
     return path
@@ -239,6 +257,7 @@ def _down_igtv(igtv, dest: str = None, directory: str = None, dump_metadata: boo
     path = None
     total = len(igtv) if is_preloaded else None
     logger.info("Downloading {0} IGTV videos...".format(total or "(?)"))
+    success = fails = exists = 0
     # prepare progress bar, hide progress bar when quiet and show download details when debugging
     with progress(total=total, desc="Processing", ascii=False) as bar:
         for i, video in enumerate(igtv, start=1):
@@ -248,7 +267,7 @@ def _down_igtv(igtv, dest: str = None, directory: str = None, dump_metadata: boo
             subdir = video.title
             subdir = subdir.replace("/", "-")  # clean
             # NOTE: force_subdir if dump_metadata ?
-            path = _down_structure(video, dest, directory, subdir, force_subdir=False, mono=True)  # `subdir` can also be the filename if the post has only one media
+            path, (s, f, e) = _down_structure(video, dest, directory, subdir, force_subdir=False, mono=True)  # `subdir` can also be the filename if the post has only one media
             # dump metadata
             if dump_metadata:
                 filename = subdir + ".json"
@@ -256,7 +275,12 @@ def _down_igtv(igtv, dest: str = None, directory: str = None, dump_metadata: boo
                 logger.debug("-> [{0}] dump metadata".format(filename))
                 with open(metadata_file, "w+") as f:
                     json.dump(video.as_dict(), f, indent=4)
+            # calcualte total
+            success += s
+            fails += f
+            exists += e
             bar.update(1)
+    logger.info("{0} total = {1} success + {2} fails + {3} exists".format(success + fails + exists, success, fails, exists) + " " * 10)
     if path:  # path is None if error occurred in `_down_structure()`
         logger.info("Destination: {0}".format(path))
     return path

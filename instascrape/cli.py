@@ -456,7 +456,6 @@ def down(args: argparse.Namespace):
             for i, (function, arguments, kwargs) in enumerate(profiles, start=1):
                 with handle_errors(current_function_name=function.__name__, is_final=i == len(jobs)):
                     info_print("(↓) {0}".format(function.__name__.title().replace("_", " ")), text=target if target else None, color=Fore.LIGHTBLUE_EX)
-                    # deepcopy `InstaScraper` object to ensure better safety
                     path = function(*arguments, **kwargs)
                     if path is None:
                         # no download destination path returned because the download failed
@@ -472,7 +471,6 @@ def down(args: argparse.Namespace):
             print()
             with handle_errors(current_function_name=function.__name__, is_final=i == len(jobs)):
                 info_print("(↓) {0}".format(function.__name__.title().replace("_", " ")), text=target if target else None, color=Fore.LIGHTBLUE_EX)
-                # deepcopy `InstaScraper` object to ensure better safety
                 path = function(*arguments, **kwargs)
                 if path is None:
                     # no download destination path returned because of download failed

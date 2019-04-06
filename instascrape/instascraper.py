@@ -529,7 +529,7 @@ class InstaScraper(LoggerMixin):
         p = self.get_post(shortcode)
         self._logger.info("Downloading {0} with {1} media...".format(shortcode, len(p)))
         # subdir = to_datetime(p.created_time) + "_" + p.shortcode
-        path = _down_structure(p, dest, subdir=p.shortcode, force_subdir=dump_metadata)
+        path, _ = _down_structure(p, dest, subdir=p.shortcode, force_subdir=dump_metadata)
         if dump_metadata:
             filename = p.shortcode + ".json"
             metadata_file = os.path.join(path, p.shortcode, filename)
@@ -551,7 +551,7 @@ class InstaScraper(LoggerMixin):
     def download_user_story(self, name: str, dest: str = None) -> str:
         story = self.get_user_story(name)
         self._logger.info("Downloading @{0}'s with {1} media...".format(name, len(story)))
-        path = _down_structure(story, dest, directory="@" + story.owner_name + "(story)")
+        path, _ = _down_structure(story, dest, directory="@" + story.owner_name + "(story)")
         if path:
             self._logger.info("Destination: {0}".format(path))
         return path
@@ -559,7 +559,7 @@ class InstaScraper(LoggerMixin):
     def download_hashtag_story(self, tag: str, dest: str = None) -> str:
         story = self.get_hashtag_story(tag)
         self._logger.info("Downloading story of #{0} with {1} media...".format(tag, len(story)))
-        path = _down_structure(story, dest, directory="#" + story.owner_name + "(story)")
+        path, _ = _down_structure(story, dest, directory="#" + story.owner_name + "(story)")
         if path:
             self._logger.info("Destination: {0}".format(path))
         return path
