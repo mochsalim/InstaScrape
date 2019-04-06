@@ -42,7 +42,7 @@ def progress(total: int = None, desc: str = None, ascii: bool = True, disable: b
         bar.close()
 
 
-def _down_from_src(src: str, filename: str, path: str = None, mono: bool = False) -> str or None:
+def _down_from_src(src: str, filename: str, path: str = None) -> str or None:
     """Low-level function to download media from a URL (`src`).
     * Called in `download_user_profile_pic`.
     * Only downloads mp4 and jpeg.
@@ -51,7 +51,6 @@ def _down_from_src(src: str, filename: str, path: str = None, mono: bool = False
         src: source of media (URL)
         filename: filename of the file
         path: full path to the download destination
-        mono: shows the file downloading size in detail if True
 
     Returns:
         path: full path to the download destination
@@ -83,11 +82,9 @@ def _down_from_src(src: str, filename: str, path: str = None, mono: bool = False
         # Download
         logger.debug("=> [{0}] {1} ({2} kB)".format(finish_filename, mime, size_in_kb))
         f = open(os.path.join(path, part_filename), "wb+")
-        with progress(int(size), ascii=False, disable=not mono) as bar:
-            for chunk in r.iter_content(1024):
-                if chunk:
-                    f.write(chunk)
-                    bar.update(1024)
+        for chunk in r.iter_content(1024):
+            if chunk:
+                f.write(chunk)
     except Exception as e:
         logger.error("Download Error (src: '{0}'): ".format(src) + str(e))
         return None
@@ -101,7 +98,7 @@ def _down_from_src(src: str, filename: str, path: str = None, mono: bool = False
     return path
 
 
-def _down_structure(structure, dest: str = None, directory: str = None, subdir: str = None, force_subdir: bool = False, mono: bool = False) -> (str, tuple):
+def _down_structure(structure, dest: str = None, directory: str = None, subdir: str = None, force_subdir: bool = False) -> (str, tuple):
     """Download media of containers of a single structure to `dest`. May deecorate the proccess with progress bar.
     - If there is multiple media in the structure, a sub directory will be created to store the media.
     * This function calls `down_from_src` function and wraps it with some interactions with Post object to support downloading post.
@@ -121,7 +118,6 @@ def _down_structure(structure, dest: str = None, directory: str = None, subdir: 
         directory: make a new directory inside `dest` to store all files
         subdir: name of the sub directory which is created when downloading multiple media
         force_subdir: force create a sub directory and store all the media (used when dump_metadata=True)
-        mono: for downloading single individual object, which will display the 'size' for the progress bar instead of downloaded 'items'
 
     Returns:
         str: full path to the download destination
@@ -150,7 +146,7 @@ def _down_structure(structure, dest: str = None, directory: str = None, subdir: 
     logger.debug("Downloading {0} ({1} media) [{2}]...".format(subdir or directory, len(containers), structure.typename))
     logger.debug("Path: " + path)
     downs = exists = 0
-    with progress(len(containers), disable=mono) as bar:
+    with progress(len(containers), disable=False) as bar:
         for i, c in enumerate(containers, start=1):
             bar.set_postfix_str(c.typename)
             if multi:
@@ -170,7 +166,7 @@ def _down_structure(structure, dest: str = None, directory: str = None, subdir: 
                 time.sleep(0.1)  # give some time for displaying the 'Exists' badge of the progress bar
             else:
                 # download
-                state = _down_from_src(c.src, filename, path, mono=mono)
+                state = _down_from_src(c.src, filename, path)
                 if state:
                     downs += 1
             bar.update(1)
@@ -263,7 +259,7 @@ def _down_igtv(igtv, dest: str = None, directory: str = None, dump_metadata: boo
             subdir = video.title
             subdir = subdir.replace("/", "-")  # clean
             # NOTE: force_subdir if dump_metadata ?
-            path, (d, e) = _down_structure(video, dest, directory, subdir, force_subdir=False, mono=True)  # `subdir` can also be the filename if the post has only one media
+            path, (d, e) = _down_structure(video, dest, directory, subdir, force_subdir=False)  # `subdir` can also be the filename if the post has only one media
             # dump metadata
             if dump_metadata:
                 filename = subdir + ".json"
