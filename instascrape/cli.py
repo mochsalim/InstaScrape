@@ -20,7 +20,7 @@ from instascrape.exceptions import InstaScrapeError
 
 
 @contextmanager
-def handle_errors(current_function_name: str = None, is_final: bool = False):
+def handle_errors(is_final: bool = False):
     """Any exceptions thrown inside this context is logged and printed out but they will not trigger program exit."""
     try:
         yield
@@ -37,11 +37,11 @@ def handle_errors(current_function_name: str = None, is_final: bool = False):
         exc = "".join(traceback.format_exception(*exc))
         logger.error(str(e))
         logger.debug(str(exc))
-        info_print("(✗) Failed:", text="{0} because {1}".format(current_function_name + "()" + Fore.LIGHTRED_EX, Fore.RESET + Style.BRIGHT + str(e)), color=Fore.LIGHTRED_EX)
+        info_print("(✗) Download Failed", color=Fore.LIGHTRED_EX)
     except Exception as e:
         logger = logging.getLogger("instascrape")
         logger.critical(str(e), exc_info=True)
-        info_print("(✗) Failed:", text="{0} because {1}".format(current_function_name + "()" + Fore.LIGHTRED_EX, Fore.RESET + Style.BRIGHT + str(e)), color=Fore.LIGHTRED_EX)
+        info_print("(✗) Downloa Failed", color=Fore.LIGHTRED_EX)
     finally:
         pass
 
@@ -286,7 +286,7 @@ def dump(args: argparse.Namespace):
 
     for i, (function, arguments, kwarguments, string, title) in enumerate(jobs, start=1):
         print()
-        with handle_errors(current_function_name=function.__name__, is_final=i == len(jobs)):
+        with handle_errors(is_final=i == len(jobs)):
             info_print("(Dump) {0}".format(function.__name__.title().replace("_", " ")), text=string if string else None, color=Fore.LIGHTBLUE_EX)
             result = function(*arguments, **kwarguments)
             data = result.as_dict() if hasattr(result, "as_dict") else result
@@ -454,7 +454,7 @@ def down(args: argparse.Namespace):
         for target, profiles in profile_jobs:
             print("\n" + Style.BRIGHT + Fore.LIGHTCYAN_EX + "> \033[4mDownloading User Profile:", Style.BRIGHT + "\033[4m@{0}".format(target))
             for i, (function, arguments, kwargs) in enumerate(profiles, start=1):
-                with handle_errors(current_function_name=function.__name__, is_final=i == len(jobs)):
+                with handle_errors(is_final=i == len(jobs)):
                     info_print("(↓) {0}".format(function.__name__.title().replace("_", " ")), text=target if target else None, color=Fore.LIGHTBLUE_EX)
                     path = function(*arguments, **kwargs)
                     if path is None:
@@ -469,7 +469,7 @@ def down(args: argparse.Namespace):
         # retrieve functions and arguments from the job queue
         for i, (function, arguments, kwargs, target) in enumerate(jobs, start=1):
             print()
-            with handle_errors(current_function_name=function.__name__, is_final=i == len(jobs)):
+            with handle_errors(is_final=i == len(jobs)):
                 info_print("(↓) {0}".format(function.__name__.title().replace("_", " ")), text=target if target else None, color=Fore.LIGHTBLUE_EX)
                 path = function(*arguments, **kwargs)
                 if path is None:
